@@ -1,0 +1,88 @@
+import React, { useState } from "react";
+import { Tooltip } from "antd";
+import NotificationIcon from 'assets/icons/notificationsIcon.svg';
+import DarkNotificationIcon from 'assets/icons/DarkNotificationsIcon.svg';
+import GenericAvatarImage from 'assets/icons/GenericAvatar.svg';
+import DarkGenericAvatarImage from 'assets/icons/DarkGenericAvatar.svg';
+import EncoreLogoImage from 'assets/images/EncoreLogo2.svg';
+import EncoreMobileLogoImage from 'assets/images/EncoreLogo.svg';
+import BlackXImage from 'assets/icons/BlackX.svg';
+import { ClientDataReceived } from "interfaces/dashboard/clientDataReceived.interface";
+import { cleanlocalStorage } from "helper/localStorage.helper";
+import { useNavigate } from "react-router-dom";
+import { HeaderTitle } from "interfaces/dashboard/headerTitle.enum";
+import { appRoute } from "consts/routes.const";
+
+interface AdminHeaderProps {
+    isUser: HeaderTitle;
+    user: ClientDataReceived;
+    notificationBadgeCounter?: number;
+    hideNotifications?: () => void;
+}
+
+const AdminHeader: React.FC<AdminHeaderProps> = ({isUser, user, notificationBadgeCounter, hideNotifications }) => {
+    const [isProfileMenuCollapsed, setIsProfileMenuCollapsed] = useState(false);
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        cleanlocalStorage();
+        navigate(isUser === HeaderTitle.Client ? appRoute.clients.login : appRoute.admin.login);
+    }
+
+    const handleNotifications = () => {
+        if (isUser === HeaderTitle.Admin && (notificationBadgeCounter && notificationBadgeCounter > 0) && hideNotifications) {
+            hideNotifications();
+        }
+    }
+
+    return (
+        <>
+            <header className="flex justify-between items-center h-14 fixed w-screen z-50 md:p-4
+                bg-primaryMariner-50 md:bg-primaryViking-800">
+                <img src={EncoreLogoImage} alt="Encore Logo" className="pl-4 py-4 hidden md:flex" />
+                <img src={EncoreMobileLogoImage} alt="Encore Logo" className="pl-4 py-4 md:hidden" />
+                <div className="flex items-center space-x-4">
+                    <Tooltip title="Notifications">
+                        <button className="relative" onClick={handleNotifications}>
+                            {notificationBadgeCounter && notificationBadgeCounter >= 1 && (
+                                <p className="w-4 h-4 text-xs text-neutrals-white bg-statesRed-red rounded-xl text-center absolute bottom-4 left-3">
+                                    {notificationBadgeCounter < 9 ? notificationBadgeCounter : 9 }
+                                </p>
+                            )}
+                            <img src={NotificationIcon} alt="Notifications" className="w-6 h-6 hidden md:flex" />
+                            <img src={DarkNotificationIcon} alt="Notifications" className="w-fit h-5 md:hidden" />
+                        </button>    
+                    </Tooltip>
+                    
+                    <div className="flex items-center space-x-2 pr-1 md:pr-6">
+                        <span className="text-base font-medium font-figtree text-neutrals-black md:text-neutrals-white">{user && user.name ? user.name : "User"}</span>
+                        <button className="w-10 h-10 rounded-full overflow-hidden" onClick={()=> setIsProfileMenuCollapsed(!isProfileMenuCollapsed)}>
+                            <img src={GenericAvatarImage} alt="User Avatar" className="w-full h-full object-cover hidden md:flex" />
+                            <img src={DarkGenericAvatarImage} alt="User Avatar" className="w-full h-full object-cover md:hidden" />
+                        </button>
+                    </div>
+                    
+                </div>
+            </header>
+            {isProfileMenuCollapsed && (
+                <div className="absolute top-14 right-0 w-1/4 bg-neutrals-white border border-greys-300 z-40 h-4/5 flex flex-col">
+                    <div className="border border-greys-300 py-2 px-4 h-1/4 flex flex-col items-center justify-center gap-1">
+                        <img src={GenericAvatarImage} alt="User Avatar" className="w-fit h-16 object-cover" />
+                        <p className="font-figtree text-2xl text-primaryMariner-900 font-medium">{user && user.name ? user.name : "User"}</p>
+                        <p className="font-figtree text-sm text-primaryMariner-900 font-medium">{user.email}</p>
+                    </div>
+                    <div className="border border-greys-300 py-2 px-4 h-3/4">
+                        <button className="w-full py-2 px-4 text-left text-primaryLinkWater-950 bg-primaryLinkWater-50">Change profile picture</button>
+                        <button className="w-full py-2 px-4 text-left text-primaryLinkWater-950" onClick={handleLogout}>Logout</button>
+                    </div>
+                    <button className="absolute right-4 top-4" onClick={()=> setIsProfileMenuCollapsed(!isProfileMenuCollapsed)}>
+                        <img src={BlackXImage} alt="Close" />
+
+                    </button>
+                </div>
+            )}
+        </>
+    );
+};
+
+export default AdminHeader;

@@ -1,0 +1,9 @@
+export const CATEGORY_AND_CHATS = "categoriesAndChat";
+export const CATEGORY_CHATS = "categoryChat";
+export const LAWYER_CHATS = "lawyerChats";
+export const PREVIOUS_CHATS = "previousChat";
+export const CATEGORY_LIST = "category";
+export const CHAT_HISTORY = "chatHistory";
+export const CHAT_INFO = "chatInfo";
+export const CLIENT_DOCS = "clientDocs";
+export const COMPANY_DATA = "companyData";

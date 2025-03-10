@@ -1,0 +1,262 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.App {
+  text-align: center;
+  height: 100%;
+  width: 100%;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.custom-search,
+.custom-input {
+  height: 48px;
+  border-radius: 8px;
+  font-family: "Figtree", "sans-serif";
+  font-weight: 500;
+
+  &::placeholder {
+    font-size: 16px;
+    color: #6f7886;
+  }
+}
+
+.custom-gray-scroll{
+  &::-webkit-scrollbar-track{
+    border-radius: 10px;
+    background-color: #F5F5F5;
+  }
+
+  &::-webkit-scrollbar{
+    width: 4px;
+    background-color: #F5F5F5;
+  }
+
+  &::-webkit-scrollbar-thumb{
+    border-radius: 10px;
+    background-color: #A4AEB6;
+  }
+}
+
+.custom-form {
+  .ant-form-item {
+    margin-bottom: 0;
+  }
+}
+
+.custom-select {
+  height: 48px;
+
+  .ant-select-selector {
+    border-radius: 8px;
+  }
+  .ant-select-selection-placeholder {
+    font-family: "Figtree", "sans-serif";
+    font-weight: 500;
+    font-size: 16px;
+    color: #6f7886;
+  }
+}
+
+.custom-table {
+  td,
+  th {
+    font-family: "Figtree", "sans-serif";
+    font-weight: 500;
+  }
+
+  .ant-pagination-total-text {
+    flex: auto;
+  }
+  .ant-table-pagination {
+    padding-left: 24px;
+    padding-right: 24px;
+
+    .ant-pagination-item {
+      background-color: #eaedef;
+      font-family: "Figtree", "sans-serif";
+      font-weight: 500;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .ant-pagination-item-active {
+      background-color: #1975d2;
+      color: white;
+      a {
+        color: white;
+      }
+    }
+  }
+  &.ant-table-wrapper {
+    table {
+      thead {
+        tr {
+          th {
+            background-color: #f0f4f9;
+            padding: 12px;
+            font-weight: 500;
+            color: #6f7886;
+            font-size: 14px;
+            border-radius: 0px !important;
+          }
+        }
+      }
+    }
+  }
+}
+
+.custom-tabs {
+  &.ant-tabs-top > .ant-tabs-nav {
+    margin-bottom: 0px;
+    font-family: "Figtree", "sans-serif";
+    font-weight: 500;
+    &::before {
+      border: 0px;
+    }
+  }
+  &.is-page {
+    &.ant-tabs-top > .ant-tabs-nav {
+      &::before {
+        border: 1px solid #6f788623;
+      }
+    }
+    .ant-tabs-nav-wrap {
+      padding-left: 20px;
+    }
+  }
+
+  .ant-tabs-nav-wrap {
+    padding-left: 70px;
+  }
+
+  .ant-tabs-nav-list {
+    .ant-tabs-tab {
+      &.ant-tabs-tab-active {
+        .ant-tabs-tab-btn {
+          color: #1975d2;
+          font-family: "Figtree", "sans-serif";
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  .ant-tabs-ink-bar {
+    background: #1975d2;
+    height: 3px !important;
+    border-top-left-radius: 100px;
+    border-top-right-radius: 100px;
+  }
+
+  .ant-pagination-options {
+    display: none;
+  }
+
+  &.custom-tabs-border-b {
+    .ant-tabs-nav {
+      border-bottom: 1px solid #c2c9ce;
+    }
+  }
+}
+
+.ant-modal {
+  .ant-btn-primary {
+    background-color: #1975d2;
+  }
+
+  &.modal-delete {
+    .ant-btn-primary {
+      background-color: #e23939;
+    }
+  }
+}
+
+.custom-breadcrumb {
+  font-family: "Figtree", "sans-serif";
+  font-weight: 500;
+  &.ant-breadcrumb li:last-child {
+    color: #1975d2;
+  }
+}
+
+.custom-drawer {
+  &.ant-drawer-content {
+    background-color: #f0f4f9;
+  }
+  .ant-drawer-header {
+    border: none;
+  }
+
+  .ant-drawer-title {
+    color: #6f7886;
+    font-family: "Figtree", "sans-serif";
+    font-size: 14px;
+  }
+}
+.company-detail-drawer-root {
+  margin-top: 208px;
+
+  .ant-drawer-content-wrapper {
+    box-shadow: none;
+    border: 1px solid #c2c9ce;
+  }
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 5px;
+  margin-block: 15px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #A4AEB6;
+  border-radius: 5px;
+  margin-left: 4px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #A4AEB6;
+}

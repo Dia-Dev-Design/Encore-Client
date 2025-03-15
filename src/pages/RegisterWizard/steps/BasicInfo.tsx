@@ -314,7 +314,7 @@ const BasicInfo: React.FC<BasicInfoProps> = ({ basicInfoData, setBasicInfoData, 
                 <S.FormGroup>
                     <S.RegisterTitle>Where is your company located?
                     <S.TooltipWrapper>
-                        <S.TooltipIcon>🛈</S.TooltipIcon>
+                        <S.TooltipIcon style={{color: 'blue'}}>*</S.TooltipIcon>
                         <S.TooltipText>Use the checkboxes in the dropdown to select multiple countries, states, or locations as needed</S.TooltipText>
                     </S.TooltipWrapper>
                     </S.RegisterTitle>

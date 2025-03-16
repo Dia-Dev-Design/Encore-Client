@@ -23,10 +23,10 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({companyDetailsData, setC
     const companyDetailsStateRef = useRef<HTMLDivElement>(null);
     const companyDetailsCountryRef = useRef<HTMLDivElement>(null);
     
-    const [selectedStructureOption, setSelectedStructureOption] = useState<string>("");
+    const [selectedStructureOption, setSelectedStructureOption] = useState<string>("Other");
     const [otherStructureOption, setOtherStructureOption] = useState<string>("");
-    const [selectedRaiseOption, setSelectedRaiseOption] = useState<string>("");
-    const [selectedEmployeeOption, setSelectedEmployeeOption] = useState<string>("");
+    const [selectedRaiseOption, setSelectedRaiseOption] = useState<string>("No");
+    const [selectedEmployeeOption, setSelectedEmployeeOption] = useState<string>("No");
     const [isCompanyStatesOpen, setIsCompanyStatesOpen] = useState(false);
     const [selectedCompanyStatesOptions, setSelectedCompanyStatesOptions] = useState<string[]>([]);
     const [companyStateErrorMessage, setCompanyStateErrorMessage] = useState<string>("");

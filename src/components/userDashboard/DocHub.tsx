@@ -1,203 +1,130 @@
-import { Dropdown, Table, TableColumnsType, Tooltip } from "antd";
-import React, { useEffect, useState } from "react";
-import { ReactComponent as VerticalDotsIcon } from "assets/icons/vertical_dots_gray.svg";
-import DocIcon  from "assets/icons/DocHubOff.svg";
-import { DocHubDataType, Params } from "interfaces/clientDashboard/dochub/dochub.interface";
-import { FilterValue, SorterResult, TablePaginationConfig, TableRowSelection } from "antd/es/table/interface";
-import { getDefaultSortOrder } from "helper/table.helper";
+import { Row, Col, Pagination } from "antd";
+import React, { useState } from "react";
+import DocIcon from "assets/icons/pdf.png";
+import { Params } from "interfaces/clientDashboard/dochub/dochub.interface";
 import { useQueryParams } from "helper/query.helper";
 import { CLIENT_DOCS } from "consts/clientPanel/clientQuery.const";
-import { getRecentDocuments } from "api/clientDocHub.api";
-import { PAGINATION_ITEMS_PER_PAGE } from "helper/pagination.helper";
-import ShowTotal from "components/common/dataTable/TotalPages";
-import { SortOrder } from "interfaces/table.interface";
-import { getUser } from "api/dashboard.api";
+import { getUserDocumentIds } from "api/clientDocHub.api";
+import PDFThumbnail from "components/clients/company/doc-hub/PDFThumbnail";
+import PDFViewer from "components/clients/company/doc-hub/PDFViewer";
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import "react-pdf/dist/esm/Page/TextLayer.css";
+import "./DocHub.css";
+import { pdfjs } from "react-pdf";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.js`;
+
+interface DocumentType {
+  id?: string;
+  name: string;
+  type: string;
+  url: string;
+  size: number;
+  createdAt: string;
+  [key: string]: any;
+}
 
 const DocHub: React.FC = () => {
-    const { data: userData, isLoading: userDataLoading } = getUser();
-    const [folderID, setFolderID] = useState<string>("");
-    const [params, setParams] = useQueryParams<Params>({
-        documentLimit: 5,
-        documentPage: 1,
-    });
-    const { data, isLoading } = getRecentDocuments(CLIENT_DOCS, folderID, {
-        limit: params.documentLimit,
-        page: params.documentPage,
-    });
-    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-    
-    useEffect(()=>{
-        if (userData?.companies && userData?.companies.length > 0){
-            const company = userData.companies[userData.companies.length-1];
-            if (company.rootFolderId){
-                setFolderID(company.rootFolderId)
-            } else {
-                alert("The company does not have an associated folder, please contact an administrator");
-            }
-        }
-    }, [userData]);
+  const [params, setParams] = useQueryParams<Params>({
+    documentLimit: 6,
+    documentPage: 1,
+  });
 
-    const loadOrders = (name: string, params: Params) => {
-        return getDefaultSortOrder(
-            name,
-            params.documentSortOption,
-            params.documentSortOrder
-        );
-    };
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<DocumentType | null>(
+    null
+  );
 
-    const columns = (
-        params: Params
-    ): TableColumnsType<DocHubDataType> => [
-        {
-            title: "Name",
-            dataIndex: "name",
-            key: "docName",
-            width: "200px",
-            sorter: true,
-            defaultSortOrder: loadOrders("docName", params),
-        },
-        {
-            title: "Product Tag",
-            dataIndex: "product",
-            key: "productTag",
-            sorter: true,
-            defaultSortOrder: loadOrders("productTag", params),
-        },
-        {
-            title: "Task/Chat",
-            dataIndex: "taskOrChat",
-            key: "taskName",
-            sorter: true,
-            defaultSortOrder: loadOrders("taskName", params),
-        },
-        {
-            title: "Owner",
-            dataIndex: "owner",
-            key: "owner",
-            sorter: true,
-            defaultSortOrder: loadOrders("owner", params),
-        },
-        {
-            title: "Upload Date",
-            dataIndex: "uploadDate",
-            key: "uploadDate",
-            render: (uploadDate) => new Date(uploadDate).toLocaleDateString(),
-            sorter: true,
-            defaultSortOrder: loadOrders("uploadDate", params),
-        },
-        {
-            title: "Location",
-            dataIndex: "location",
-            key: "location",
-            width: 150,
-            sorter: true,
-            defaultSortOrder: loadOrders("assignedToName", params),
-        },
-        {
-            title: "Download",
-            dataIndex: "downloadUrl",
-            key: "downloadUrl",
-            render: (link) => <Tooltip title="Download File"><a href={link} target="_blank"><img src={DocIcon} alt="Download"/> </a></Tooltip>,            
-            width: "50px",
-            sorter: false,
-            defaultSortOrder: loadOrders("downloadUrl", params),
-        },
-        // {
-        //     title: "Actions",
-        //     dataIndex: "actions",
-        //     key: "actions",
-        //     render: (_, record) => (
-        //         <Dropdown
-        //             menu={{
-        //                 items: DropdownActions<DocHubDataType>(
-        //                 handleAssignTo,
-        //                 handleMarkAsComplete,
-        //                 handleDeleteTask,
-        //                 record
-        //                 ),
-        //             }}
-        //             trigger={["click"]}
-        //         >
-        //         <VerticalDotsIcon className="cursor-pointer" />
-        //         </Dropdown>
-        //     ),
-        // },
-    ];
+  const { data, isLoading } = getUserDocumentIds(CLIENT_DOCS, {
+    limit: params.documentLimit,
+    page: params.documentPage,
+  });
 
-    const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
-        setSelectedRowKeys(newSelectedRowKeys);
-    };
+  const handlePreviewDocument = (document: DocumentType) => {
+    setSelectedDocument(document);
+    setPreviewVisible(true);
+  };
 
-    const rowSelection: TableRowSelection<DocHubDataType> = {
-        selectedRowKeys,
-        onChange: onSelectChange,
-    };
+  const handleClosePreview = () => {
+    setPreviewVisible(false);
+    setTimeout(() => {
+      setSelectedDocument(null);
+    }, 300);
+  };
 
-    const handleTableChange = (
-        pagination: TablePaginationConfig,
-        filters: Record<string, FilterValue | null>,
-        sorter: SorterResult<DocHubDataType> | SorterResult<DocHubDataType>[]
-    ) => {
-        const multipleSort = Array.isArray(sorter) ? sorter[0] : sorter;
-
-        setParams({
-            documentPage: pagination.current,
-            documentLimit: pagination.pageSize,
-            documentSortOption: multipleSort.order
-            ? multipleSort.columnKey?.toString()
-            : null,
-            documentSortOrder: multipleSort.order
-            ? multipleSort.order === "ascend"
-                ? SortOrder.ASC
-                : SortOrder.DESC
-            : null,
-        });
-    };
-
-    return (
-        <section className="w-full h-full p-0 m-0 md:px-10 md:pt-6">
-            <div className="w-full h-full md:h-[76vh] flex flex-row md:gap-4">
-                <section className="w-full px-10">
-                    <div className="border border-[#C2C9CE] rounded-lg">
-                        <div className="flex justify-between px-6 py-[14px] items-center border-b border-[#C2C9CE]">
-                            <h3 className="text-2xl font-semibold font-figtree">Recent Documents</h3>
-                        </div>
-                        <Table<DocHubDataType>
-                            rowSelection={rowSelection}
-                            columns={columns(
-                                params
-                            )}
-                            dataSource={data?.data}
-                            loading={isLoading || userDataLoading}
-                            rootClassName="custom-table"
-                            pagination={{
-                            current: data?.pagination?.currentPage,
-                            pageSize: data?.pagination?.limit,
-                            total: data?.pagination?.totalItems,
-                            pageSizeOptions: PAGINATION_ITEMS_PER_PAGE,
-
-                            showTotal: (total, range) => (
-                                <ShowTotal
-                                    total={total}
-                                    range={range}
-                                    limit={data?.pagination?.limit}
-                                    onChange={(value) => {
-                                        setParams({
-                                            documentLimit: Number(value),
-                                            documentPage: 1,
-                                        });
-                                    }}
-                                />
-                            ),
-                            }}
-                            onChange={handleTableChange}
-                        />
-                    </div>
-                </section>
+  return (
+    <section className="w-full h-full p-0 m-0 md:px-10 md:pt-6">
+      <div className="w-full h-full md:h-[76vh] flex flex-row md:gap-4">
+        <section className="w-full px-10">
+          <div className="border border-[#C2C9CE] rounded-lg">
+            <div className="flex justify-between px-6 py-[14px] items-center border-b border-[#C2C9CE]">
+              <h3 className="text-2xl font-semibold font-figtree">
+                Uploaded Documents
+              </h3>
             </div>
-        </section>
-    );
-};
 
+            <div className="p-6">
+              {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  Loading documents...
+                </div>
+              ) : data?.data?.length > 0 ? (
+                <>
+                  <Row gutter={[16, 16]}>
+                    {data.data.map((doc: DocumentType, index: number) => (
+                      <Col key={doc.id || index} xs={24} sm={12} md={8} lg={6}>
+                        <PDFThumbnail
+                          fileName={doc.name}
+                          onClick={() => handlePreviewDocument(doc)}
+                        />
+                      </Col>
+                    ))}
+                  </Row>
+
+                  <div className="mt-6 flex justify-end">
+                    <Pagination
+                      total={data?.meta?.totalCount || 0}
+                      current={params.documentPage}
+                      pageSize={params.documentLimit}
+                      showSizeChanger
+                      pageSizeOptions={[6, 12]}
+                      onChange={(page: number, pageSize: number) => {
+                        setParams({
+                          documentPage: page,
+                          documentLimit: pageSize,
+                        });
+                      }}
+                      showTotal={(total: number) => `Total ${total} items`}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-64">
+                  <img
+                    src={DocIcon}
+                    alt="No documents"
+                    className="w-16 h-16 mb-4"
+                  />
+                  <p className="text-gray-500">No documents found</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {selectedDocument && (
+        <PDFViewer
+          url={
+            `http://localhost:8080/api/dochub/documents/${selectedDocument.id}/stream`
+          }
+          fileName={selectedDocument.name}
+          visible={previewVisible}
+          onClose={handleClosePreview}
+        />
+      )}
+    </section>
+  );
+};
 
 export default DocHub;

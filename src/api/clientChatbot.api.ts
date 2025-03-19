@@ -6,6 +6,9 @@ import { MoveToCategoryParams } from "interfaces/clientDashboard/moveToCategory.
 import { UploadFileToChatParams } from "interfaces/clientDashboard/UploadFileToChat.interface";
 import { ChangeCategoryNameParams } from "interfaces/clientDashboard/changeCategoryName.interface";
 import { ChangeChatNameParams } from "interfaces/clientDashboard/changeChatName.interface";
+import { getLocalItem } from "helper/localStorage.helper";
+import { Connection } from "interfaces/login/connection.interface";
+import isNil from "lodash.isnil";
 
 export const getChatbotThread = () =>
     useMutation({
@@ -18,6 +21,7 @@ export const askQuestion = () =>
         apiClient.post(`/api/chatbot/ask`, params).then(unwrapAxiosResponse),
     });
 
+
 export const askQuestionWithFile = () =>
     useMutation({
     mutationFn: (params: QuestionWithFile) =>
@@ -29,6 +33,175 @@ export const answerQuestion = () =>
     mutationFn: (params: { threadId: string, message: string }) =>
         apiClient.post(`/api/chatbot/lawyer-chat/send-message/lawyer/${params.threadId}`, {message: params.message}).then(unwrapAxiosResponse),
     });
+
+// Define new interface for streaming mutation params
+export interface StreamQuestionParams {
+    params: Question;
+    onChunk: (chunk: string) => void;
+    onComplete: () => void;
+    // onError is not included here because it's handled by useMutation itself
+}
+
+// Use a direct streaming approach with fetch while still wrapping in useMutation
+export const useStreamQuestion = () =>
+    useMutation<boolean, Error, StreamQuestionParams>({
+        mutationFn: async ({ params, onChunk, onComplete }: StreamQuestionParams) => {
+            try {
+                console.log("Starting streamQuestion with params:", params);
+                
+                // Get authentication token using the same approach as apiClient
+                const connection: Connection = JSON.parse(getLocalItem("connection") || '{}');
+                const token = connection.token;
+                
+                console.log("Authentication token retrieved:", token ? "Found" : "Not found");
+                
+                if (isNil(token)) {
+                    throw new Error("Authentication token is missing. Please log in again.");
+                }
+                
+                // Use fetch directly for streaming - it's better suited for this use case
+                const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || ''}api/chatbot/ask/stream`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(params)
+                });
+                
+                console.log("Stream response status:", response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`Error response from server: ${errorText}`);
+                    throw new Error(`Error: ${response.status} - ${errorText}`);
+                }
+                
+                const reader = response.body?.getReader();
+                if (!reader) {
+                    throw new Error("Response body is not readable as a stream");
+                }
+                
+                await processStream(reader, onChunk);
+                
+                onComplete();
+                return true; // Return success
+            } catch (error) {
+                console.error("Error in streaming question:", error);
+                onComplete();
+                throw error;
+            }
+        }
+    });
+
+// Helper function to process the stream
+async function processStream(reader: ReadableStreamDefaultReader<Uint8Array>, onChunk: (data: string) => void) {
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let currentFullText = '';
+    
+    try {
+        let accumulatedContent = '';
+    
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          // Process the chunk
+          const chunk = decoder.decode(value, { stream: true });
+          console.log(`Received raw chunk of length: ${chunk.length} buffer length: ${value.length}`);
+          
+          // Parse SSE format
+          const lines = chunk.split('\n\n');
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.substring(6));
+                
+                if (data.error) {
+                  console.error("Error parsing SSE message:", data.error);
+                  throw new Error(data.error);
+                }
+                
+                if (data.content !== undefined) {
+                  // Update accumulated content
+                  accumulatedContent += data.content;
+                  
+                  // Pass to callback after each meaningful update
+                  if (onChunk) {
+                    onChunk(accumulatedContent);
+                  }
+                }
+              } catch (e) {
+                console.error("Error parsing SSE message:", e, "Raw message:", line);
+                throw e;
+              }
+            }
+          }
+        }
+        
+        // Final callback with complete content
+          console.log("Stream complete, final content length:", accumulatedContent.length);
+        
+        
+        return accumulatedContent;
+     } catch (error: any) {
+        console.error("Error processing stream:", error);
+        onChunk("Error: " + (error.message || "Unknown error occurred while processing the response"));
+        throw error;
+    }
+}
+
+// Keep the original function for backward compatibility
+export const streamQuestion = async (params: Question, onChunk: (chunk: string) => void, onComplete: () => void) => {
+    try {
+        // Can't use the hook directly in a regular function, so we'll implement the logic again
+        console.log("Using compatibility streamQuestion function");
+        
+        // Get authentication token using the same approach as apiClient
+        const connection: Connection = JSON.parse(getLocalItem("connection") || '{}');
+        const token = connection.token;
+        
+        console.log("Authentication token retrieved:", token ? "Found" : "Not found");
+        
+        if (isNil(token)) {
+            throw new Error("Authentication token is missing. Please log in again.");
+        }
+        
+        // Use fetch directly for streaming
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || ''}api/chatbot/ask/stream`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(params)
+        });
+        
+        console.log("Stream response status:", response.status);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Error response from server: ${errorText}`);
+            throw new Error(`Error: ${response.status} - ${errorText}`);
+        }
+        
+        const reader = response.body?.getReader();
+        if (!reader) {
+            throw new Error("Response body is not readable as a stream");
+        }
+        
+        await processStream(reader, onChunk);
+        
+        onComplete();
+    } catch (error) {
+        console.error("Error in compatibility streamQuestion:", error);
+        onComplete();
+        throw error;
+    }
+};
 
 export const createCategory = () =>
     useMutation({

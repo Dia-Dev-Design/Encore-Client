@@ -2,12 +2,37 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient, unwrapAxiosResponse } from "./client.config";
 import { DocHubDataType, Params } from "interfaces/clientDashboard/dochub/dochub.interface";
 
-export function getUserDocumentIds(key: string,  params: any) {
+export function getUserDocumentIds(key: string, params: { limit: number; page: number }) {
     return useQuery({
-        queryKey: [key],
+        queryKey: [key, params.page, params.limit],
         queryFn: async ({ signal }) => 
             apiClient
-                .get(`/api/dochub/documents/with-urls`, {signal, params,})
+                .get(`/api/dochub/documents/with-urls`, {
+                    signal,
+                    params: {
+                        limit: params.limit,
+                        page: params.page,
+                    },
+                })
                 .then(unwrapAxiosResponse),
+    });
+}
+
+export function uploadDocuments() {
+    return useMutation({
+        mutationFn: async (files: File[]) => {
+            const formData = new FormData();
+            files.forEach((file) => {
+                formData.append('files', file);
+            });
+
+            const response = await apiClient.post('/api/dochub/upload/multiple', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            return unwrapAxiosResponse(response);
+        },
     });
 }

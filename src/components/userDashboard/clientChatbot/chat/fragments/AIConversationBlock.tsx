@@ -15,19 +15,8 @@ interface AIConversationBlockProps {
 }
 
 const AIConversationBlock: React.FC<AIConversationBlockProps> =({blockId, message, setAnswerCondition, isStreaming, isError}) => {
-    // Use a ref to track previous message for debugging
-    const prevMessageRef = useRef<string>("");
-    const renderCountRef = useRef(0);
     const [visibleContent, setVisibleContent] = useState<string>("");
     const fullContentRef = useRef<string>("");
-
-    console.log("AIConversationBlock rendering:", { 
-        blockId, 
-        messageLength: message?.length || 0,
-        messageSample: message?.substring(0, 20),
-        isStreaming,
-        isError
-    });
 
     // When message changes, update the visible content appropriately
     useEffect(() => {
@@ -45,65 +34,8 @@ const AIConversationBlock: React.FC<AIConversationBlockProps> =({blockId, messag
             setVisibleContent(message);
         }
     }, [message, isStreaming]);
-    
-    // Log whenever the component renders with new props
-    // useEffect(() => {
-    //     if (!isStreaming || !message) return;
-    //     fullContentRef.current = message;
 
-    //     // if (prevMessageRef.current !== message) {
-    //     //     console.log(`AIConversationBlock received new message (${++renderCountRef.current}):`, { 
-    //     //         blockId, 
-    //     //         messageLength: message?.length || 0,
-    //     //         messageDiff: message?.length - (prevMessageRef.current?.length || 0),
-    //     //         isStreaming, 
-    //     //         isError 
-    //     //     });
-    //     //     prevMessageRef.current = message;
-    //     // }
-    //     // If we're streaming and message is different from what's visible,
-    // // gradually reveal the content character by character
-    // if (message !== visibleContent) {
-    //     // Determine how many characters to show next
-    //     const nextLength = Math.min(
-    //         visibleContent.length + 5, // Show 5 chars at a time
-    //         fullContentRef.current.length
-    //     );
-        
-    //     // If we haven't shown the full content yet
-    //     if (nextLength > visibleContent.length) {
-    //         const timer = setTimeout(() => {
-    //             setVisibleContent(fullContentRef.current.substring(0, nextLength));
-    //         }, 10); // Very small delay for smooth typing effect
-                
-    //             return () => clearTimeout(timer);
-    //         }
-    //     }
-    // }, [message, blockId, isStreaming, isError]);
-    
-    // Set up a forced re-render timer during streaming
-    // const [, setForceUpdate] = useState({});
-    // useEffect(() => {
-    //     console.log("AIConversationBlock streaming update:", { 
-    //         isStreaming, 
-    //         messageLength: message?.length,
-    //     });
-    //     if (isStreaming) {
-    //         setVisibleContent("");
-    //         fullContentRef.current = message || "";
-
-    //         // const timer = setInterval(() => {
-    //         //     // Force React to re-render this component
-    //         //     setForceUpdate({});
-    //         // }, 100); // Re-render every 100ms
-            
-    //         // return () => clearInterval(timer);
-    //     } else {
-    //         setVisibleContent(fullContentRef.current || "");
-    //     }
-    // }, [message,isStreaming]);
-
-    // Handle streaming effect if needed
+    // Handle streaming effect
     useEffect(() => {
         if (!isStreaming || !message) return;
         
@@ -127,29 +59,20 @@ const AIConversationBlock: React.FC<AIConversationBlockProps> =({blockId, messag
         }
     }, [message, visibleContent, isStreaming]);
 
-    // Add a debug effect to help track what's happening
-    useEffect(() => {
-        console.log("AIConversationBlock streaming update:", { 
-            isStreaming, 
-            messageLength: message?.length,
-            visibleContentLength: visibleContent?.length,
-            fullContentRefLength: fullContentRef.current?.length
-        });
-    }, [message, isStreaming, visibleContent]);
     
     // Actively animate the cursor during streaming
-    const [showCursor, setShowCursor] = useState(true);
-    useEffect(() => {
-        if (isStreaming) {
-            const cursorTimer = setInterval(() => {
-                setShowCursor(prev => !prev);
-            }, 500); // Blink every 500ms
+    // const [showCursor, setShowCursor] = useState(true);
+    // useEffect(() => {
+    //     if (isStreaming) {
+    //         const cursorTimer = setInterval(() => {
+    //             setShowCursor(prev => !prev);
+    //         }, 500); // Blink every 500ms
             
-            return () => clearInterval(cursorTimer);
-        } else {
-            setShowCursor(false);
-        }
-    }, [isStreaming]);
+    //         return () => clearInterval(cursorTimer);
+    //     } else {
+    //         setShowCursor(false);
+    //     }
+    // }, [isStreaming]);
 
     const displayContent = isStreaming ? visibleContent : message;
     
@@ -170,8 +93,8 @@ const AIConversationBlock: React.FC<AIConversationBlockProps> =({blockId, messag
                     ) : (
                         <div>
                             {displayContent ? <Markdown>{displayContent}</Markdown> : ""}
-                            {isStreaming && showCursor && (
-                                <span className="typing-cursor">|</span>
+                            {isStreaming && (
+                                <span className="typing-cursor"></span>
                             )}
                         </div>
                     )}

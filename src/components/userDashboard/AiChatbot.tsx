@@ -41,11 +41,6 @@ const AiChatbot: React.FC = () => {
         if (chatHistoryData && chatHistoryData.response) {
             // Check if we have valid messages
             if (chatHistoryData.response.messages && Array.isArray(chatHistoryData.response.messages)) {
-                console.log("Setting history from chat data:", {
-                    messageCount: chatHistoryData.response.messages.length,
-                    firstFewMessages: chatHistoryData.response.messages.slice(0, 3)
-                });
-                
                 // Ensure all messages have valid content and checkpoint_id
                 const cleanedMessages = chatHistoryData.response.messages.map((msg: HistoryNode, index: number) => {
                     // Create proper history node structure matching what the components expect
@@ -63,9 +58,7 @@ const AiChatbot: React.FC = () => {
                     
                     return historyNode;
                 });
-                
-                console.log("Cleaned history messages:", cleanedMessages);
-                
+                                
                 setSelectedChatType(ChatSpaceType.chatSpace);
                 setChatbotThreadType(chatHistoryData.response.chatType as ChatTypeEnum);
                 setHistoryConversation(cleanedMessages);

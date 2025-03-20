@@ -53,10 +53,8 @@ const ChatSection: React.FC<ChatSectionProps> =({
     const { mutate: requestLawyer, isPending: requestLawyerLoading } = requestALawyer();
     const { mutate: streamQuestionMutation, isPending: isStreamingQuestion } = useStreamQuestion();
     
-    // Local state to track conversation during streaming
     const [localHistoryConversation, setLocalHistoryConversation] = useState<HistoryNode[]>([]);
 
-     // Add previousThreadIdRef at the component's top level
      const previousThreadIdRef = useRef<string | undefined>(undefined);
     
     useEffect(() => {
@@ -75,25 +73,14 @@ const ChatSection: React.FC<ChatSectionProps> =({
         
         // If thread changed or history changed, update local history
         if (hasThreadChanged || isParentHistoryChanged) {
-            console.log("Updating local history:", {
-                threadChanged: hasThreadChanged,
-                previousThreadId: previousThreadIdRef.current,
-                currentThreadId,
-                historyChanged: isParentHistoryChanged,
-                parentHistoryLength: historyConversation.length,
-                localHistoryLength: localHistoryConversation.length
-            });
-            
             // Update local history with parent history
             setLocalHistoryConversation(historyConversation);
-            
             // Update the ref to current thread ID
             previousThreadIdRef.current = currentThreadId;
         }
         
         // If we're switching to a new empty thread, clear local history
         if (currentThreadId && historyConversation.length === 0 && localHistoryConversation.length > 0) {
-            console.log("Clearing local history for new empty thread");
             setLocalHistoryConversation([]);
             previousThreadIdRef.current = currentThreadId;
         }
@@ -297,7 +284,6 @@ const ChatSection: React.FC<ChatSectionProps> =({
                 // Create new history with both user question and AI placeholder
                 // This ensures both messages are added in a single state update
                 const initialHistory = [...localHistoryConversation, userQuestionNode, placeholderAnswer];
-                console.log("$Setting initial history with user question and AI placeholder", initialHistory);
                 
                 // Update both local state and parent state
                 setLocalHistoryConversation(initialHistory);
@@ -305,14 +291,11 @@ const ChatSection: React.FC<ChatSectionProps> =({
 
                 // Set streaming state to true
                 setIsStreaming(true);
-                console.log("Starting streaming, isStreaming set to true");
                 
                 // Call the streaming mutation with properly separated handlers
                 streamQuestionMutation({
                     params: payload,
-                    onChunk: (partialResponse) => {
-                        console.log("Received chunk, content length:", partialResponse.length);
-                        
+                    onChunk: (partialResponse) => {                        
                         // Update the streaming content state directly
                         setStreamingContent(partialResponse);
                         
@@ -342,9 +325,7 @@ const ChatSection: React.FC<ChatSectionProps> =({
 
                         }, 0);
                     },
-                    onComplete: () => {
-                        console.log("Streaming complete, setting isStreaming to false");
-                        
+                    onComplete: () => {                        
                         // IMPORTANT: We need to capture the current state for both variables
                         // to avoid closure issues with outdated state
                         const currentPlaceholderId = placeholderIdRef.current;
@@ -363,12 +344,6 @@ const ChatSection: React.FC<ChatSectionProps> =({
                             
                             // Get the actual content from the current history
                             const finalContent = prevHistory[aiMessageIndex].content;
-                            
-                            console.log("$Stream completed - current state:", {
-                                finalContentLength: finalContent?.length || 0,
-                                placeholderId: currentPlaceholderId,
-                                historyLength: prevHistory.length
-                            });
                             
                             // Create the updated history with the streaming message finalized
                             const updatedHistory = prevHistory.map(node => {

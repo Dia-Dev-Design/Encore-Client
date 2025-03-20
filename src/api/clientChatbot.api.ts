@@ -46,15 +46,11 @@ export interface StreamQuestionParams {
 export const useStreamQuestion = () =>
     useMutation<boolean, Error, StreamQuestionParams>({
         mutationFn: async ({ params, onChunk, onComplete }: StreamQuestionParams) => {
-            try {
-                console.log("Starting streamQuestion with params:", params);
-                
+            try {                
                 // Get authentication token using the same approach as apiClient
                 const connection: Connection = JSON.parse(getLocalItem("connection") || '{}');
                 const token = connection.token;
-                
-                console.log("Authentication token retrieved:", token ? "Found" : "Not found");
-                
+                                
                 if (isNil(token)) {
                     throw new Error("Authentication token is missing. Please log in again.");
                 }
@@ -69,7 +65,6 @@ export const useStreamQuestion = () =>
                     body: JSON.stringify(params)
                 });
                 
-                console.log("Stream response status:", response.status);
                 
                 if (!response.ok) {
                     const errorText = await response.text();
@@ -109,7 +104,6 @@ async function processStream(reader: ReadableStreamDefaultReader<Uint8Array>, on
           
           // Process the chunk
           const chunk = decoder.decode(value, { stream: true });
-          console.log(`Received raw chunk of length: ${chunk.length} buffer length: ${value.length}`);
           
           // Parse SSE format
           const lines = chunk.split('\n\n');
@@ -143,7 +137,6 @@ async function processStream(reader: ReadableStreamDefaultReader<Uint8Array>, on
         }
         
         // Final callback with complete content
-          console.log("Stream complete, final content length:", accumulatedContent.length);
         
         
         return accumulatedContent;
@@ -157,15 +150,9 @@ async function processStream(reader: ReadableStreamDefaultReader<Uint8Array>, on
 // Keep the original function for backward compatibility
 export const streamQuestion = async (params: Question, onChunk: (chunk: string) => void, onComplete: () => void) => {
     try {
-        // Can't use the hook directly in a regular function, so we'll implement the logic again
-        console.log("Using compatibility streamQuestion function");
-        
-        // Get authentication token using the same approach as apiClient
         const connection: Connection = JSON.parse(getLocalItem("connection") || '{}');
         const token = connection.token;
-        
-        console.log("Authentication token retrieved:", token ? "Found" : "Not found");
-        
+                
         if (isNil(token)) {
             throw new Error("Authentication token is missing. Please log in again.");
         }
@@ -179,9 +166,7 @@ export const streamQuestion = async (params: Question, onChunk: (chunk: string) 
             },
             body: JSON.stringify(params)
         });
-        
-        console.log("Stream response status:", response.status);
-        
+                
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`Error response from server: ${errorText}`);

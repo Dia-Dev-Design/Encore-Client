@@ -18,55 +18,26 @@ const ClientConversation: React.FC<ClientConversationProps> =({historyConversati
     // Find if any message is in streaming state
     const hasStreamingMessage = historyConversation.some(node => node.isStreaming);
 
-
-    useEffect(() => {
-        // Check if any message in the history is still streaming
-        const anyStreaming = historyConversation.some(node => node.isStreaming === true);
-        console.log("Streaming status check:", { 
-            hasStreamingMessage, 
-            anyNodeWithStreamingTrue: anyStreaming,
-            historyNodes: historyConversation.map(n => ({
-                id: n.checkpoint_id, 
-                streaming: n.isStreaming
-            }))
-        });
-    }, [historyConversation, hasStreamingMessage]);
-
     // Logging function to keep the effects cleaner
     const logConversationChanges = useCallback(() => {
         const currentHistoryLength = historyConversation.length;
         if (currentHistoryLength !== prevHistoryLengthRef.current) {
-            console.log("Conversation history updated:", {
-                previousLength: prevHistoryLengthRef.current,
-                currentLength: currentHistoryLength,
-                historyItems: historyConversation.map(item => ({
-                    id: item.checkpoint_id,
-                    role: item.role,
-                    contentLength: item.content?.length || 0,
-                    isStreaming: item.isStreaming
-                }))
-            });
             prevHistoryLengthRef.current = currentHistoryLength;
-        } else if (hasStreamingMessage) {
-            console.log("Streaming update in conversation history");
-        }
+        } 
     }, [historyConversation, hasStreamingMessage]);
 
     // Combined scrolling effect
     useEffect(() => {
-        // Log conversation changes
         logConversationChanges();
         
         // Basic scroll to bottom
         if (conversationEndRef.current) {
-            console.log("Scrolling to bottom of conversation");
             conversationEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
         
         // Set up interval for streaming scrolling
         let interval: NodeJS.Timeout | null = null;
         if (hasStreamingMessage && conversationEndRef.current) {
-            console.log("Setting up periodic scroll during streaming");
             interval = setInterval(() => {
                 conversationEndRef.current?.scrollIntoView({ behavior: 'smooth' });
             }, 500); // Scroll every 500ms during streaming

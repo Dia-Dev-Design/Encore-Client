@@ -1,13 +1,37 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient, unwrapAxiosResponse } from "./client.config";
-import { DocHubDataType, Params } from "interfaces/clientDashboard/dochub/dochub.interface";
 
-export function getRecentDocuments(key: string, folderID: string, params: any) {
+export function getUserDocumentIds(key: string, params: { limit: number; page: number }) {
     return useQuery({
-        queryKey: [key],
-        queryFn: async ({ signal }) => 
-            apiClient
-                .get(`/api/folders/${folderID}/files/recent`, {signal, params,})
-                .then(unwrapAxiosResponse),
+        queryKey: [key, params.page, params.limit],
+        queryFn: async ({ signal }) => {
+            const response = await apiClient.get(`/api/dochub/documents/with-urls`, {
+                signal,
+                params: {
+                    limit: params.limit,
+                    page: params.page,
+                },
+            });
+            return unwrapAxiosResponse(response);
+        },
+    });
+}
+
+export function uploadDocuments() {
+    return useMutation({
+        mutationFn: async (files: File[]) => {
+            const formData = new FormData();
+            files.forEach((file) => {
+                formData.append('files', file);
+            });
+
+            const response = await apiClient.post('/api/dochub/upload/multiple', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            return unwrapAxiosResponse(response);
+        },
     });
 }

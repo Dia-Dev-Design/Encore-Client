@@ -4,6 +4,8 @@ export interface HistoryNode {
     role: string;
     url?: string;
     fileId?: string;
+    isStreaming?: boolean;
+    isError?: boolean;
 }
 
 export interface DocumentNode {

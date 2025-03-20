@@ -11,3 +11,20 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Add typing cursor animation */
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.typing-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  width: 2px;
+  height: 20px;
+  background-color: currentColor;
+  animation: blink 1s infinite;
+  vertical-align: middle;
+}

@@ -111,7 +111,11 @@ const App: React.FC = () => {
         />
         <Route
           path={appRoute.clients.registered}
-          element={<RegisterCompleted />}
+          element={
+            <RedirectIfLoggedIn isAuthenticated={isLoggedIn}>
+              <RegisterCompleted setIsLoggedIn={setIsLoggedIn} />
+            </RedirectIfLoggedIn>
+          }
         />
         <Route
           path={appRoute.clients.authRedirection}

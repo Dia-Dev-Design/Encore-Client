@@ -39,6 +39,12 @@ export const adminSidebarOptions: SidebarOption[] = [
         iconOn: AiChatbotIconOn,
         iconOff: AiChatbotIconOff,
     },
+    {
+        path: appRoute.admin.docHub,
+        label: "Doc Hub",
+        iconOn: DocHubOn,
+        iconOff: DocHubOff,
+    },
 ];
 
 export const userSidebarOption: SidebarOption[] = [

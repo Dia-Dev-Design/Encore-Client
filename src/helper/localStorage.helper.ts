@@ -9,6 +9,10 @@ export const setLocalItemWithExpiry = (key: string, value: any, expiryInDays: nu
         expiry: expiryTime,
     };
 
+    if (key === "connection" || key === "isAdminLoggedIn") {
+        console.log(`Setting ${key} in localStorage:`, JSON.stringify(item));
+    }
+
     secureLocalStorage.setItem(key, JSON.stringify(item));
 };
 
@@ -16,10 +20,19 @@ export const setLocalItemWithExpiry = (key: string, value: any, expiryInDays: nu
 export const getLocalItem = (key: string) => {
     const itemStr = secureLocalStorage.getItem(key) as string;
 
-    if (!itemStr) { return null; }
+    if (!itemStr) {
+        if (key === "connection" || key === "isAdminLoggedIn") {
+            console.log(`Warning: ${key} not found in localStorage`);
+        }
+        return null;
+    }
 
     try {
         const item = JSON.parse(itemStr);
+
+        if (key === "connection" || key === "isAdminLoggedIn") {
+            console.log(`Retrieved ${key} from localStorage:`, item.value);
+        }
 
         return item.value;
     } catch (error) {

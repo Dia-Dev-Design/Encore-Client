@@ -10,7 +10,12 @@ export const apiClient = axios.create({
 export const unwrapAxiosResponse = <T>(response: AxiosResponse<T>) => response.data;
 
 apiClient.interceptors.response.use(undefined, async (err) => {
-  const connection: Connection = JSON.parse(getLocalItem("connection"));
+  const connectionStr = getLocalItem("connection");
+  if (!connectionStr) {
+    return Promise.reject(err);
+  }
+  
+  const connection: Connection = JSON.parse(connectionStr);
   const token = connection.token;
   if (err.response?.status === 401) {
     // TODO: remove session
@@ -23,7 +28,12 @@ apiClient.interceptors.response.use(undefined, async (err) => {
 });
 
 apiClient.interceptors.request.use((config) => {
-  const connection: Connection = JSON.parse(getLocalItem("connection"));
+  const connectionStr = getLocalItem("connection");
+  if (!connectionStr) {
+    return config;
+  }
+  
+  const connection: Connection = JSON.parse(connectionStr);
   const token = connection.token;
 
   if (!isNil(token)) {

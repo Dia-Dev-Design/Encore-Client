@@ -31,6 +31,7 @@ import { appRoute } from "consts/routes.const";
 import { ClientDashboardView } from "pages/UserDashboard/ClientDashboardView";
 import DissolutionRoadmap from "pages/AdminDashboard/clients/dissolutionRoadmap/DissolutionRoadmap";
 import { DocHubView } from "pages/UserDashboard/DocHubView";
+import { AdminDocHubView } from "pages/AdminDashboard/DocHubAdmin";
 
 const RedirectIfLoggedIn: React.FC<{
   isAuthenticated: boolean;
@@ -47,16 +48,33 @@ const App: React.FC = () => {
   const [isSideBarCollapsed, setIsSideBarCollapsed] = useState<boolean>(false);
 
   useEffect(() => {
-    const userLoggedIn = getLocalItem("isLoggedIn") === "true";
-    const adminLoggedIn = getLocalItem("isAdminLoggedIn") === "true";
+    const checkAuthState = () => {
+      try {
+        const userLoggedIn = getLocalItem("isLoggedIn") === "true";
+        const adminLoggedIn = getLocalItem("isAdminLoggedIn") === "true";
+        const connectionStr = getLocalItem("connection");
 
-    setIsLoggedIn(userLoggedIn);
-    setIsAdminLoggedIn(adminLoggedIn);
-    setIsLoading(false);
-  }, []);
+        if (!connectionStr) {
+          console.warn("No connection found in localStorage");
+          setIsLoggedIn(false);
+          setIsAdminLoggedIn(false);
+          setIsLoading(false);
+          return;
+        }
 
-  useEffect(() => {
+        setIsLoggedIn(userLoggedIn);
+        setIsAdminLoggedIn(adminLoggedIn);
+      } catch (error) {
+        console.error("Error checking auth state:", error);
+        setIsLoggedIn(false);
+        setIsAdminLoggedIn(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     cleanlocalStorageWithExpiry();
+    checkAuthState();
   }, []);
 
   if (isLoading) {
@@ -69,9 +87,7 @@ const App: React.FC = () => {
         <Route
           path="/"
           element={
-            isAdminLoggedIn ? (
-              <Navigate to={appRoute.admin.dashboard} replace />
-            ) : isLoggedIn ? (
+            isLoggedIn ? (
               <Navigate to={appRoute.clients.dashboard} replace />
             ) : (
               <Navigate to={appRoute.clients.login} replace />
@@ -172,6 +188,29 @@ const App: React.FC = () => {
               }
             />
           </Route>
+          <Route
+            path="ai-chatbot"
+            element={
+              <AiChatbotView
+                isSideBarCollapsed={isSideBarCollapsed}
+                setIsSideBarCollapsed={setIsSideBarCollapsed}
+              />
+            }
+          />
+        </Route>
+        <Route
+          path={appRoute.admin.docHub}
+          element={<ProtectedRoute isAuthenticated={isAdminLoggedIn} />}
+        >
+          <Route
+            index
+            element={
+              <AdminDocHubView
+                isSideBarCollapsed={isSideBarCollapsed}
+                setIsSideBarCollapsed={setIsSideBarCollapsed}
+              />
+            }
+          />
         </Route>
 
         <Route

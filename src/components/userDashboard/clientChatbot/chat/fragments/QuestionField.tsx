@@ -34,6 +34,7 @@ const QuestionField: React.FC<QuestionFieldProps> =({
         if (isAskLawyer) {
             setIsAskLawyer(false);
             handleLawyerSend(questionSentence);
+            console.log("questionSentence", questionSentence);
         } else {
             handleSend(questionSentence, uploadedFile ? uploadedFile as File : undefined);
         }

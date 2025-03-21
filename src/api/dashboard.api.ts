@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, UseQueryResult } from "@tanstack/react-query";
 
 import { apiClient, unwrapAxiosResponse } from "./client.config";
 
@@ -53,14 +53,17 @@ export function getUser() {
   return useQuery<ClientDataReceived>({
     queryKey: ['user'],
     queryFn: async ({ signal }) => {
+      console.log("This is our response from getUser()", signal)
       const response = await apiClient.get('/api/auth/me', { signal });
       return unwrapAxiosResponse(response);
     }
   });
 }
 
-export function getAdminUser() {
-  return useQuery({
+
+
+export function getAdminUser(): UseQueryResult<any, unknown> {
+  return useQuery<any, unknown>({
     queryKey: ['user'],
     queryFn: async ({ signal }) => {
       const response = await apiClient.get('/api/auth/admin/me', { signal });

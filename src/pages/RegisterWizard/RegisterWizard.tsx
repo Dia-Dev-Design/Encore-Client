@@ -157,28 +157,7 @@ const RegisterWizard: React.FC = () => {
             }
         }
     };
-
-    const validateStepData = (): boolean => {
-        switch (currentStep) {
-            case 0:
-                return validateBasicInfo();
-            case 1:
-                return validateCompanyDetails();
-            case 2:
-                return validateCompanyStatus();
-            case 3:
-                return validateCallSchedule();
-            default:
-                return false;
-        }
-    };
-
-    const goBack = () => {
-        if (currentStep > 0) {
-            setCurrentStep(currentStep - 1);
-        }
-    };
-
+    
     const validateBasicInfo = (): boolean => {
         const fieldsToValidate = [
             { field: "fullname", value: basicInfoData.fullname },
@@ -203,6 +182,27 @@ const RegisterWizard: React.FC = () => {
     
         return isValid;
     }
+    const validateStepData = (): boolean => {
+        switch (currentStep) {
+            case 0:
+                return validateBasicInfo();
+            case 1:
+                return validateCompanyDetails();
+            case 2:
+                return validateCompanyStatus();
+            case 3:
+                return validateCallSchedule();
+            default:
+                return false;
+        }
+    };
+
+    const goBack = () => {
+        if (currentStep > 0) {
+            setCurrentStep(currentStep - 1);
+        }
+    };
+
 
     const validateCompanyDetails = (): boolean => {
         const errors: string[] = [];

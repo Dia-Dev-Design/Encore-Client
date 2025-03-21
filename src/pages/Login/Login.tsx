@@ -1,6 +1,5 @@
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import { validateEmail, validatePassword } from "utils/userValidations";
-import axios from 'axios';
 import LogoImage from 'assets/images/BigLogo.png';
 import GoogleLogoImage from 'assets/icons/GoogleLogo.png';
 import ShowPasswordIcon from 'assets/icons/StatusOn.svg';
@@ -14,6 +13,11 @@ import { appRoute } from 'consts/routes.const';
 import { Connection } from 'interfaces/login/connection.interface';
 import { UserType } from 'interfaces/login/userType.enum';
 
+const getApiUrl = (path: string) => {
+    const base = process.env.REACT_APP_API_BASE_URL || '';
+    const formattedBase = base.endsWith('/') ? base : `${base}/`;
+    return `${formattedBase}api/${path.replace(/^api\//, '')}`;
+};
 
 interface LoginProps {
     setIsAdminLoggedIn: (isLogged: boolean) => void;
@@ -23,39 +27,55 @@ interface LoginProps {
 
 const Login: React.FC<LoginProps> = ({setIsAdminLoggedIn, setIsLoggedIn, adminLogin}) => {
     const navigate = useNavigate();
-    const [checking, setChecking] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [emailErrorMessage, setEmailErrorMessage] = useState("");
     const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
+    const [generalErrorMessage, setGeneralErrorMessage] = useState("");
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            const tokenGot = localStorage.getItem("token");
-            if (tokenGot) {
-                let connectionToken: Connection = {
-                    token: JSON.parse(tokenGot).value,
-                    userType: UserType.client
-                }
+        // Set up event listener for messages from popup
+        const handleAuthMessage = (event: MessageEvent) => {
+            // Verify origin matches our API for security
+            const apiOrigin = new URL(process.env.REACT_APP_API_BASE_URL || '').origin;
+            if (event.origin !== apiOrigin) return;
 
-                if (connectionToken.token) {
-                    clearInterval(interval);
-                    setChecking(false);
-                    localStorage.removeItem("token");
-                    setLocalItemWithExpiry("connection", JSON.stringify(connectionToken), 2);
+            try {
+                if (event.data && event.data.token) {
+                    const connectionToken: Connection = {
+                        token: event.data.token,
+                        userType: UserType.client
+                    };
+                    
+                    setLocalItemWithExpiry(
+                        "connection",
+                        JSON.stringify(connectionToken),
+                        rememberMe ? 5 : 2
+                    );
+                    
                     checkUserStatus(connectionToken);
                 }
+            } catch (error) {
+                console.error('Error processing auth message:', error);
+                setGeneralErrorMessage('Authentication failed. Please try again.');
+                setIsLoading(false);
             }
+        };
 
-        }, 1000);
-    }, [checking]);
+        window.addEventListener('message', handleAuthMessage);
+        
+        // Clean up event listener when component unmounts
+        return () => {
+            window.removeEventListener('message', handleAuthMessage);
+        };
+    }, [rememberMe]);
 
     const checkUserStatus = async (connectionToken: Connection) => {
-
         try {
-            const response = await fetch(process.env.REACT_APP_API_BASE_URL+"api/auth/me", {
+            const response = await fetch(getApiUrl("auth/me"), {
                 method: "GET", 
                 headers: { "Accept": "application/json", "Authorization":  "Bearer "+connectionToken.token || "" },
             });
@@ -68,28 +88,29 @@ const Login: React.FC<LoginProps> = ({setIsAdminLoggedIn, setIsLoggedIn, adminLo
                     //     cleanlocalStorage();
                     //     return;	
                     // }
-                    setLocalItemWithExpiry("isLoggedIn", String(true), rememberMe ? 5 : 1);
+                    setLocalItemWithExpiry("isLoggedIn", String(true), rememberMe ? 5 : 2);
                     setIsLoggedIn(true);
                     navigate(appRoute.clients.dashboard);
                 } else {
                     setUserData(data, connectionToken.token);
-                    if (data.companies.length > 0){
+                    if (data && data.companies && data.companies.length > 0){
                         setCompanyData(data.companies[data.companies.length - 1]);
                     }
                     navigate(appRoute.clients.registerProcess);
                 }
             } else {
                 const errorData = await response.json();
-                const errorMessage = errorData.message || 'Error gathering data. Please try again.';
-                cleanlocalStorage();
-                alert("Error gathering data. Please try again.");
-                console.error(errorMessage);
-                navigate(appRoute.clients.login);
+                throw new Error(errorData.message || 'Error gathering data. Please try again.');
+                // cleanlocalStorage();
+                // alert("Error gathering data. Please try again.");
+                // console.error(errorMessage);
+                // navigate(appRoute.clients.login);
             }
         } catch (error) {
             console.error('Error gathering data.', error);
             cleanlocalStorage();
-            alert("Error gathering data. Please try again.");
+            // alert("Error gathering data. Please try again.");
+            setGeneralErrorMessage("Error gathering data. Please try again.");
             navigate(appRoute.clients.login);
         }
     };
@@ -110,86 +131,104 @@ const Login: React.FC<LoginProps> = ({setIsAdminLoggedIn, setIsLoggedIn, adminLo
     };
 
     const setCompanyData = (data: any) => {
-        let company: Company = {
+        const company: Company = {
             id: data.id,
-            name: data?.name,
-            industryId: data?.industryId ? data?.industryId : "",
-            parentCompanyId: data?.parentCompanyId ? data?.parentCompanyId : null,
-            structure: data?.structure ? data?.structure : null,
-            currentStage: data?.currentStage ? data?.currentStage : null,
-            hasRaisedCapital: data?.hasRaisedCapital ? data?.hasRaisedCapital : null,
-            hasW2Employees: data?.hasW2Employees ? data?.hasW2Employees : null,
+            name: data?.name || "",
+            industryId: data?.industryId || "",
+            parentCompanyId: data?.parentCompanyId || null,
+            structure: data?.structure || null,
+            currentStage: data?.currentStage || null,
+            hasRaisedCapital: data?.hasRaisedCapital || null,
+            hasW2Employees: data?.hasW2Employees || null,
             hasCompletedSetup: false
         };
-        setLocalItemWithExpiry("company", JSON.stringify(company), 2);
+        setLocalItemWithExpiry("company", JSON.stringify(company), rememberMe ? 5 : 2);
     }
 
-    const handleSubmit = () => {
+    const validateForm = () => {
         const emailError = validateEmail(email);
         const passwordError = validatePassword(password);
 
         setEmailErrorMessage(emailError);
         setPasswordErrorMessage(passwordError);
-        if (!emailError && !passwordError) {
+        setGeneralErrorMessage("");
+        
+        return !emailError && !passwordError;
+    }; 
+
+    const handleSubmit = () => {
+        if (validateForm()) {
             handleLogin();
         }
     };
 
     const handleLogin = async () => {
-        const url = adminLogin ? process.env.REACT_APP_API_BASE_URL+'api/auth/admin/login' : process.env.REACT_APP_API_BASE_URL+'api/auth/login';
-        console.log("This is the url ======> ", url)
-        // let userString: string | null =  localStorage.getItem('user')
-        // if (!userString) {
-        //     userString = ''
-        // }
-        // console.log("This is our userString++++++>", userString)
-        // const user: any = JSON.parse(userString)
+        setIsLoading(true);
+        setGeneralErrorMessage("");
+
+        const url = adminLogin 
+            ? getApiUrl("auth/admin/login") 
+            : getApiUrl("auth/login");
 
         try {
-            const body = { email, password }
-            // console.log("This is our user and accesToknen", user, "AccesToken:", user.accessToken )
-            const response: any = await axios.post(url, body,
-                //  {headers: {authorization: `Bearer ${user.accessToken}` }}
-                )
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email,
+                    password,
+                }),
+            });
 
-            console.log("This is the response+++>", response)
-{}
-            if (response.status === 201) {
-                // const data = await response.json();
-                const token = response.data.authToken;
+            const data = await response.json();
+
+            if (response.ok) {
+                const token = data.accessToken;
 
                 let connectionToken: Connection = {
                     token: token,
-                    userType: UserType.admin
+                    userType: adminLogin ? UserType.admin : UserType.client
                 }
+
+                setLocalItemWithExpiry("connection", JSON.stringify(connectionToken), rememberMe ? 5 : 2);
 
                 if (adminLogin) {
                     setIsAdminLoggedIn(true);
                     setLocalItemWithExpiry("isAdminLoggedIn", String(true), rememberMe ? 5 : 1);
                     
-                    setIsAdminLoggedIn(true);
+                    // setIsAdminLoggedIn(true);
                     navigate(appRoute.admin.dashboard);
                 } else {
-                    connectionToken.userType = UserType.client;
-                    setLocalItemWithExpiry("token", token, 0.5);
+                    // connectionToken.userType = UserType.client;
+                    // setLocalItemWithExpiry("token", token, 0.5);
                     checkUserStatus(connectionToken);
                 }
-                setLocalItemWithExpiry("connection", JSON.stringify(connectionToken), 2);
+                // setLocalItemWithExpiry("connection", JSON.stringify(connectionToken), 2);
 
+            } else {
+                handleLoginError(data.message);
             }
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error during login:', error);
-            const errorMessage = error.resposnes.data.message || 'Login failed. Please try again.';
-            switch (errorMessage) {
-                case "User not found":
-                    setEmailErrorMessage("User not found");
-                    break;
-                case "Invalid password":
-                    setPasswordErrorMessage("Invalid password");
-                    break;
-                default:
-                    break;
-            }
+            setGeneralErrorMessage("Login failed. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleLoginError = (message: string = '') => {
+        switch (message) {
+            case "User not found":
+                setEmailErrorMessage("User not found");
+                break;
+            case "Invalid password":
+                setPasswordErrorMessage("Invalid password");
+                break;
+            default:
+                setGeneralErrorMessage(message || 'Login failed. Please try again.');
+                break;
         }
     };
 
@@ -202,18 +241,50 @@ const Login: React.FC<LoginProps> = ({setIsAdminLoggedIn, setIsLoggedIn, adminLo
     };
 
     const handleLoginWithGoogle = () => {
+        setIsLoading(true);
+        setGeneralErrorMessage("");
+        
+        // Configure popup features for better compatibility
+        const width = 500;
+        const height = 600;
+        const left = window.screenX + (window.outerWidth - width) / 2;
+        const top = window.screenY + (window.outerHeight - height) / 2;
+        const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
+        
+        // Open the OAuth popup
         const popup = window.open(
-            serverURL()+"/api/auth/google",
-            "authPopup",
-            "width=500,height=500"
+            getApiUrl('auth/google'),
+            "googleAuthPopup",
+            features
         );
-    
+        
         if (!popup) {
-            alert("The popup was blocked by the browser.");
+            setGeneralErrorMessage("Popup was blocked. Please allow popups for this site.");
+            setIsLoading(false);
             return;
         }
-    
-        setChecking(true);
+        
+        // Set timeout to prevent indefinite loading if user abandons the popup
+        const timeout = setTimeout(() => {
+            if (popup && !popup.closed) {
+                popup.close();
+            }
+            setGeneralErrorMessage("Authentication timed out. Please try again.");
+            setIsLoading(false);
+        }, 120000); // 2 minute timeout
+        
+        // Check periodically if popup was closed without completing auth
+        const checkClosed = setInterval(() => {
+            if (popup && popup.closed) {
+                clearInterval(checkClosed);
+                clearTimeout(timeout);
+                // Only show error if we're still loading (no successful auth)
+                if (isLoading) {
+                    setGeneralErrorMessage("Authentication was cancelled.");
+                    setIsLoading(false);
+                }
+            }
+        }, 1000);
     };
 
     return (
@@ -228,46 +299,48 @@ const Login: React.FC<LoginProps> = ({setIsAdminLoggedIn, setIsLoggedIn, adminLo
                     <S.FormGroup>
                         <S.Label htmlFor="email">Email <span className="required">*</span></S.Label>
                         <S.Input
-                            hasErrors={emailErrorMessage != ""} 
+                            hasErrors={!!emailErrorMessage} 
                             type="email" 
                             id="email" 
                             value={email} 
                             onChange={(e) => setEmail(e.target.value)} 
+                            disabled={isLoading}
                         />
-                        {emailErrorMessage && emailErrorMessage != "" && <S.ErrorLabel htmlFor="email">{emailErrorMessage}</S.ErrorLabel>}
+                         {emailErrorMessage && <S.ErrorLabel htmlFor="email">{emailErrorMessage}</S.ErrorLabel>}
                     </S.FormGroup>
                     <S.FormGroup>
                         <S.Label htmlFor="password">Password <span className="required">*</span></S.Label>
                         <S.PasswordContainer>
                             <S.Input
-                                hasErrors={passwordErrorMessage != ""} 
+                                hasErrors={!!passwordErrorMessage} 
                                 type={showPassword ? "text" : "password"}
                                 id="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                disabled={isLoading}
                             />
                             <S.ToggleIcon src={showPassword ? HidePasswordIcon : ShowPasswordIcon} onClick={() => setShowPassword(!showPassword)}/>
                         </S.PasswordContainer>
-                        {passwordErrorMessage && passwordErrorMessage != "" && <S.ErrorLabel htmlFor="password">{passwordErrorMessage}</S.ErrorLabel>}
+                        {passwordErrorMessage && <S.ErrorLabel htmlFor="password">{passwordErrorMessage}</S.ErrorLabel>}
                         <S.RememberSection>
                             <S.RememberMe>
-                                <S.Checkbox type="checkbox" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
+                                <S.Checkbox type="checkbox" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} disabled={isLoading}/>
                                 <S.ForgotPassword>Remember Me</S.ForgotPassword>
                             </S.RememberMe>
-                            <S.LabelButton onClick={handleRedirectToForgotPassword}>Forgot Password?</S.LabelButton>
+                            <S.LabelButton onClick={handleRedirectToForgotPassword} disabled={isLoading}>Forgot Password?</S.LabelButton>
                         </S.RememberSection>
                     </S.FormGroup>
-                    <S.Button onClick = {() => handleSubmit()}>Log In</S.Button>
+                    <S.Button onClick = {() => handleSubmit()} disabled={isLoading}>Log In</S.Button>
                 </S.Form>
                 {!adminLogin && <>
                     <S.Separator>&nbsp; Or sign up with &nbsp;</S.Separator>
-                    <S.GoogleButton onClick={handleLoginWithGoogle}>
+                    <S.GoogleButton onClick={handleLoginWithGoogle} disabled={isLoading}>
                         <S.GoogleIcon src={GoogleLogoImage} alt="Google" />
                         <span>Google</span>
                     </S.GoogleButton>
                     <S.RegisterContainer>
                         <S.Label>Don’t have an account?</S.Label>
-                        <S.LabelButton onClick={handleRedirectToRegister}>Sign Up</S.LabelButton>
+                        <S.LabelButton onClick={handleRedirectToRegister} disabled={isLoading}>Sign Up</S.LabelButton>
                     </S.RegisterContainer>
                 </>}
                 

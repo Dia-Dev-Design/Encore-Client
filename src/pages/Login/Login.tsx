@@ -1,5 +1,6 @@
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import { validateEmail, validatePassword } from "utils/userValidations";
+import axios from 'axios';
 import LogoImage from 'assets/images/BigLogo.png';
 import GoogleLogoImage from 'assets/icons/GoogleLogo.png';
 import ShowPasswordIcon from 'assets/icons/StatusOn.svg';
@@ -12,6 +13,7 @@ import { Company, User } from 'utils/interfaces';
 import { appRoute } from 'consts/routes.const';
 import { Connection } from 'interfaces/login/connection.interface';
 import { UserType } from 'interfaces/login/userType.enum';
+
 
 interface LoginProps {
     setIsAdminLoggedIn: (isLogged: boolean) => void;
@@ -51,6 +53,7 @@ const Login: React.FC<LoginProps> = ({setIsAdminLoggedIn, setIsLoggedIn, adminLo
     }, [checking]);
 
     const checkUserStatus = async (connectionToken: Connection) => {
+
         try {
             const response = await fetch(process.env.REACT_APP_API_BASE_URL+"api/auth/me", {
                 method: "GET", 
@@ -134,21 +137,26 @@ const Login: React.FC<LoginProps> = ({setIsAdminLoggedIn, setIsLoggedIn, adminLo
 
     const handleLogin = async () => {
         const url = adminLogin ? process.env.REACT_APP_API_BASE_URL+'api/auth/admin/login' : process.env.REACT_APP_API_BASE_URL+'api/auth/login';
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email,
-                    password,
-                }),
-            });
+        console.log("This is the url ======> ", url)
+        // let userString: string | null =  localStorage.getItem('user')
+        // if (!userString) {
+        //     userString = ''
+        // }
+        // console.log("This is our userString++++++>", userString)
+        // const user: any = JSON.parse(userString)
 
-            if (response.ok) {
-                const data = await response.json();
-                const token = data.accessToken;
+        try {
+            const body = { email, password }
+            // console.log("This is our user and accesToknen", user, "AccesToken:", user.accessToken )
+            const response: any = await axios.post(url, body,
+                //  {headers: {authorization: `Bearer ${user.accessToken}` }}
+                )
+
+            console.log("This is the response+++>", response)
+{}
+            if (response.status === 201) {
+                // const data = await response.json();
+                const token = response.data.authToken;
 
                 let connectionToken: Connection = {
                     token: token,
@@ -168,22 +176,20 @@ const Login: React.FC<LoginProps> = ({setIsAdminLoggedIn, setIsLoggedIn, adminLo
                 }
                 setLocalItemWithExpiry("connection", JSON.stringify(connectionToken), 2);
 
-            } else {
-                const errorData = await response.json();
-                const errorMessage = errorData.message || 'Login failed. Please try again.';
-                switch (errorMessage) {
-                    case "User not found":
-                        setEmailErrorMessage("User not found");
-                        break;
-                    case "Invalid password":
-                        setPasswordErrorMessage("Invalid password");
-                        break;
-                    default:
-                        break;
-                }
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error during login:', error);
+            const errorMessage = error.resposnes.data.message || 'Login failed. Please try again.';
+            switch (errorMessage) {
+                case "User not found":
+                    setEmailErrorMessage("User not found");
+                    break;
+                case "Invalid password":
+                    setPasswordErrorMessage("Invalid password");
+                    break;
+                default:
+                    break;
+            }
         }
     };
 

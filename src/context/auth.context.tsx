@@ -1,20 +1,39 @@
 // src/context/auth.context.tsx
 
-import { useState, useEffect, createContext, ReactNode } from "react";
+import {
+  useState,
+  useEffect,
+  createContext,
+  ReactNode,
+  useContext,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { get } from "../utils/api-calls";
 
-// Define the User type
-interface User {
-  // Add the user properties here
-  // For example:
-  _id?: string;
+interface BaseUser {
+  id?: string;
   email?: string;
   name?: string;
-  // ... other user properties
+  phoneNumber?: string;
+  lastPasswordChange?: string;
+  isVerified?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  accessToken?: string;
 }
 
-// Define the AuthContext type
+interface RegularUser extends BaseUser {
+  isAdmin: false;
+  hasRegisteredCompanies?: boolean;
+  companies?: any[];
+}
+
+interface AdminUser extends BaseUser {
+  isAdmin: true;
+}
+
+type User = RegularUser | AdminUser;
+
 interface AuthContextType {
   isLoggedIn: boolean;
   isLoading: boolean;
@@ -24,7 +43,10 @@ interface AuthContextType {
   logOutUser: () => void;
 }
 
-// Define props for AuthProvider
+export function isAdminUser(user: User | null): user is AdminUser {
+  return user !== null && user.isAdmin === true;
+}
+
 interface AuthProviderProps {
   children: ReactNode;
 }
@@ -37,11 +59,11 @@ function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
 
   const navigate = useNavigate();
-
-  /* 
-    Functions for handling the authentication status (isLoggedIn, isLoading, user)
-    will be added here later in the next step
-  */
+  useEffect(() => {
+    if (user) {
+      console.log(user);
+    }
+  }, [user]);
 
   const storeToken = (token: string): void => {
     localStorage.setItem("authToken", token);
@@ -55,18 +77,48 @@ function AuthProvider({ children }: AuthProviderProps) {
     const storedToken = localStorage.getItem("authToken");
 
     if (storedToken) {
-      get("/auth/verify")
+      get("api/auth/me")
         .then((response) => {
-          const user: User = response.data;
+          const data = response.data;
+
+          const baseUser: BaseUser = {
+            id: data.id,
+            email: data.email,
+            name: data.name,
+            phoneNumber: data.phoneNumber,
+            lastPasswordChange: data.lastPasswordChange,
+            isVerified: data.isVerified,
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt,
+            accessToken: data.accessToken,
+          };
+
+          let userData: User;
+
+          if (data.isAdmin) {
+            userData = {
+              ...baseUser,
+              isAdmin: true
+            } as AdminUser;
+          } else {
+            userData = {
+              ...baseUser,
+              isAdmin: false,
+              hasRegisteredCompanies: data.hasRegisteredCompanies,
+              companies: data.companies,
+            } as RegularUser;
+          }
+
           setIsLoggedIn(true);
           setIsLoading(false);
-          setUser(user);
+          setUser(userData);
         })
         .catch((error) => {
           removeToken();
           setIsLoggedIn(false);
           setIsLoading(false);
           setUser(null);
+          console.log(error);
         });
     } else {
       setIsLoggedIn(false);
@@ -78,7 +130,7 @@ function AuthProvider({ children }: AuthProviderProps) {
   const logOutUser = (): void => {
     removeToken();
     authenticateUser();
-    navigate('/');
+    navigate("/login");
   };
 
   useEffect(() => {
@@ -102,3 +154,11 @@ function AuthProvider({ children }: AuthProviderProps) {
 }
 
 export { AuthProvider, AuthContext };
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === null) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+}

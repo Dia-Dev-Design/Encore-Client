@@ -100,3 +100,16 @@ export const hideAdminNotifications = () =>
           .post(`/api/notifications/read-admin/${notificationId}`)
           .then(unwrapAxiosResponse),
   });
+
+export function getCostMetrics() {
+  return useQuery({
+    queryKey: ["costMetrics"],
+    queryFn: ({ signal }) =>
+      apiClient
+        .get(`/api/metrics/cost/formula`, {
+          signal
+        })
+        .then(unwrapAxiosResponse),
+    refetchOnWindowFocus: false
+  });
+}

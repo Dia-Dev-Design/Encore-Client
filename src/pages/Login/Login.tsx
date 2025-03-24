@@ -18,6 +18,7 @@ import { Connection } from "interfaces/login/connection.interface";
 import { UserType } from "interfaces/login/userType.enum";
 import { useAuth } from "../../context/auth.context";
 
+
 const getApiUrl = (path: string) => {
   const base = process.env.REACT_APP_API_BASE_URL || "";
   const formattedBase = base.endsWith("/") ? base : `${base}/`;
@@ -29,7 +30,8 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ adminLogin }) => {
-  const { storeToken, authenticateUser } = useAuth();
+  const { storeToken, authenticateUser, setIsAdmin
+   } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -114,10 +116,16 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
       });
 
       const data = await response.json();
+      console.log('this is data after .json------->', data)
+
+      if (data.isAdmin) {
+        setIsAdmin(true)
+      }
+
 
       if (response.ok) {
         const token = data.accessToken;
-        console.log(data);
+        console.log('This is data on succesful response++++++++>', data);
         // Store the token in localStorage via AuthContext
         storeToken(token);
 
@@ -125,7 +133,10 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
         let connectionToken: Connection = {
           token: token,
           userType: adminLogin ? UserType.admin : UserType.client,
+          // isAdmin
         };
+
+        console.log("This is the connection Token----->", )
 
         setLocalItemWithExpiry(
           "connection",
@@ -133,8 +144,11 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
           rememberMe ? 5 : 2
         );
 
+         
 
-        authenticateUser();
+        setTimeout (() => {    
+          authenticateUser();
+        }, 500) 
 
         if (adminLogin) {
           navigate(appRoute.admin.dashboard);

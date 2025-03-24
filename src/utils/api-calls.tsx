@@ -6,7 +6,11 @@ export const get = <T = any>(route: string): Promise<AxiosResponse<T>> => {
   const token = localStorage.getItem("authToken");
 
   return axios.get<T>(SERVER_URL + route, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
+    },
   });
 };
 
@@ -14,7 +18,10 @@ export const post = <T = any, D = any>(route: string, body: D): Promise<AxiosRes
   const token = localStorage.getItem("authToken");
 
   return axios.post<T>(SERVER_URL + route, body, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`
+  
+  },
+    
   });
 };
 

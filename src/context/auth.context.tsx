@@ -20,6 +20,7 @@ interface BaseUser {
   createdAt?: string;
   updatedAt?: string;
   accessToken?: string;
+  isAdmin: boolean
 }
 
 interface RegularUser extends BaseUser {
@@ -41,6 +42,7 @@ interface AuthContextType {
   storeToken: (token: string) => void;
   authenticateUser: () => void;
   logOutUser: () => void;
+  setIsAdmin: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export function isAdminUser(user: User | null): user is AdminUser {
@@ -57,6 +59,7 @@ function AuthProvider({ children }: AuthProviderProps) {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false)
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -70,18 +73,20 @@ function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const removeToken = (): void => {
-    localStorage.removeItem("authToken");
+    localStorage.clear();
   };
 
   const authenticateUser = (): void => {
-    const storedToken = localStorage.getItem("authToken");
+    const storedToken: any = localStorage.getItem("authToken");
+    console.log("This is the storedToken-------->", storedToken)
+    console.log("State of is Admin", isAdmin)
 
-    if (storedToken) {
+    if (storedToken && !isAdmin) {
       get("api/auth/me")
         .then((response) => {
           const data = response.data;
 
-          const baseUser: BaseUser = {
+          const baseUser: RegularUser = {
             id: data.id,
             email: data.email,
             name: data.name,
@@ -91,27 +96,33 @@ function AuthProvider({ children }: AuthProviderProps) {
             createdAt: data.createdAt,
             updatedAt: data.updatedAt,
             accessToken: data.accessToken,
+            isAdmin: data.isAdmin,
           };
 
-          let userData: User;
+          
 
-          if (data.isAdmin) {
-            userData = {
-              ...baseUser,
-              isAdmin: true
-            } as AdminUser;
-          } else {
-            userData = {
-              ...baseUser,
-              isAdmin: false,
-              hasRegisteredCompanies: data.hasRegisteredCompanies,
-              companies: data.companies,
-            } as RegularUser;
-          }
+          // if (data.isAdmin) {
+          //   userData = {
+          //     ...baseUser,
+          //     isAdmin: true
+          //   } as AdminUser;
+          // } else {
+          //   userData = {
+          //     ...baseUser,
+          //     isAdmin: false,
+          //     hasRegisteredCompanies: data.hasRegisteredCompanies,
+          //     companies: data.companies,
+          //   } as RegularUser;
+          // }
+
+          // if (userData.hasRegisteredCompanies,
+          // )
+
+          console.log("This is the userData=======>", baseUser)
 
           setIsLoggedIn(true);
           setIsLoading(false);
-          setUser(userData);
+          setUser(baseUser);
         })
         .catch((error) => {
           removeToken();
@@ -120,10 +131,46 @@ function AuthProvider({ children }: AuthProviderProps) {
           setUser(null);
           console.log(error);
         });
+    } else if (storedToken && isAdmin ){
+
+      get("api/auth/admin/me")
+      .then((response) => {
+        const data = response.data;
+
+        const baseUser: AdminUser = {
+          id: data.id,
+          email: data.email,
+          name: data.name,
+          phoneNumber: data.phoneNumber,
+          lastPasswordChange: data.lastPasswordChange,
+          isVerified: data.isVerified,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          accessToken: data.accessToken,
+          isAdmin: data.isAdmin,
+        };
+
+
+        
+        console.log("This is the userData=======>", baseUser)
+
+        setIsLoggedIn(true);
+        setIsLoading(false);
+        setUser(baseUser);
+      })
+      .catch((error) => {
+        removeToken();
+        setIsLoggedIn(false);
+        setIsLoading(false);
+        setUser(null);
+        console.log(error);
+      });
+
     } else {
       setIsLoggedIn(false);
       setIsLoading(false);
       setUser(null);
+      removeToken();
     }
   };
 
@@ -146,6 +193,7 @@ function AuthProvider({ children }: AuthProviderProps) {
         storeToken,
         authenticateUser,
         logOutUser,
+        setIsAdmin,
       }}
     >
       {children}

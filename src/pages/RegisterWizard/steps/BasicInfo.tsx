@@ -259,6 +259,7 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
           basicInfoData
         );
         setUserData(tempUser);
+        console.log("This is data temp")
         setAccessToken(tempUser.accessToken);
 
         console.log(

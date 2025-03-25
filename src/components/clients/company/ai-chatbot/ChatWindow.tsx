@@ -85,7 +85,6 @@ const ChatWindow: React.FC<ChatWindowProps> =({
         console.error("SW", error);
     }, [error]);
 
-    // Add effect to reload history when thread changes
     useEffect(() => {
         if (chatbotThread?.id) {
             // This forces a refresh of the relevant data when the thread changes
@@ -116,7 +115,7 @@ const ChatWindow: React.FC<ChatWindowProps> =({
             const payload = {
                 threadId: chatbotThreadId,
                 message: answer,
-                userType: userType // Add user type to payload
+                userType: userType
             };
             
             console.log(`Sending answer with payload as ${userType}:`, payload);
@@ -124,21 +123,6 @@ const ChatWindow: React.FC<ChatWindowProps> =({
             sendAnswer(payload, { 
                 onSuccess: (data) => {
                     console.log("Message sent successfully:", data);
-                    
-                    // Check if this was handled locally or by the server
-                    if (data && data.handled === "locally") {
-                        console.log("Message was handled locally due to server permission issues");
-                    }
-                    
-                    // Always invalidate queries to keep UI fresh
-                    invalidateMainQueries();
-
-                    const newLawyerMessage: HistoryNode = {
-                        checkpoint_id: `lawyer-${Date.now()}`,
-                        content: answer,
-                        role: "lawyer",
-                    };
-                    setHistoryConversation([...historyConversation, newLawyerMessage]);
                 },
                 onError: (error, payload) => {
                     console.error("Error:", error);
@@ -165,14 +149,12 @@ const ChatWindow: React.FC<ChatWindowProps> =({
         }
 
         if (fetchedThread) {
-            addNewUserMessage(answer);
             sendAnswerProcess(fetchedThread);
         } else {
             if (!chatbotThread?.id ) {
                 fetchChatbotThread(undefined, {
                     onSuccess: (data) => {
                         setChatbotThread(data);
-                        addNewUserMessage(answer);
                         sendAnswerProcess(data.id);
                     },
                     onError: (error) => {
@@ -180,27 +162,10 @@ const ChatWindow: React.FC<ChatWindowProps> =({
                     },
                 });
             } else {
-                addNewUserMessage(answer);
                 sendAnswerProcess(chatbotThread.id);
             }
         }
     };
-
-    const addNewUserMessage = (answer: string) => {
-        const newHistoryConversation: HistoryNode[] = historyConversation;
-        // If the user is a lawyer or admin, use the lawyer role; otherwise, use user role
-        const role = isLawyer || userData?.userType === 'Admin' ? "lawyer" : "user";
-        
-        console.log(`Adding message as ${role} role`);
-        
-        const newQuestion: HistoryNode = {
-            checkpoint_id: `${Date.now()}`,
-            content: answer,
-            role: role,
-        };
-        newHistoryConversation.push(newQuestion);
-        setHistoryConversation(newHistoryConversation);
-    }
 
     const getHeaderTitle = () => {
         return chatbotThread?.title ? chatbotThread.title : ""

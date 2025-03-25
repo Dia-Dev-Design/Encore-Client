@@ -473,6 +473,7 @@ const ChatSection: React.FC<ChatSectionProps> =({
                     questionSentence={questionSentence}
                     setQuestionSentence={setQuestionSentence}
                     chatbotThreadType={chatbotThreadType}
+                    chatbotThreadId={chatbotThread?.id}
                 />
             </>}
             {selectedChatType === ChatSpaceType.categorySpace && 

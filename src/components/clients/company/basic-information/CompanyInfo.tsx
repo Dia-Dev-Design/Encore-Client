@@ -24,6 +24,8 @@ const CompanyInfo = ({ data, isLoading }: CompanyInfoProps) => {
     setOpen(false);
   };
 
+  if (isLoading || !data) return <Loading type={LoadingType.BLOCK} />;
+
   return (
     <div className="px-10">
       <div className="border border-greys-300 rounded-lg mt-6">
@@ -40,11 +42,9 @@ const CompanyInfo = ({ data, isLoading }: CompanyInfoProps) => {
           </button>
         </div>
         <div className="flex">
-          {!isLoading ? (
-            <>
-              <div className="flex-[0_0_917px] border-r border-r-greys-300">
-                <div className="grid grid-cols-2 gap-24 pt-4 pl-6 pr-[114px]">
-                  <div className="col-span-1">
+          <div className="flex-[0_0_917px] border-r border-r-greys-300">
+            <div className="grid grid-cols-2 gap-24 pt-4 pl-6 pr-[114px]">
+              <div className="col-span-1">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="col-span-1">
                         <CompanyInfoItem content="Contact name" type="title" />
@@ -120,11 +120,7 @@ const CompanyInfo = ({ data, isLoading }: CompanyInfoProps) => {
                   </div>
                 </div>
               </div>
-              <div className="flex-auto"></div>
-            </>
-          ) : (
-            <Loading type={LoadingType.BLOCK} />
-          )}
+          <div className="flex-auto"></div>
         </div>
       </div>
       <Drawer
@@ -139,7 +135,7 @@ const CompanyInfo = ({ data, isLoading }: CompanyInfoProps) => {
         rootClassName="company-detail-drawer-root"
         extra={<CloseOutlined onClick={onClose} className="text-2xl" />}
       >
-        <ServicesForm services={data.services} />
+        <ServicesForm services={data.services ?? []} />
       </Drawer>
     </div>
   );

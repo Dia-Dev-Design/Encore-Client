@@ -41,7 +41,7 @@ const AdminQuestionField: React.FC<AdminQuestionFieldProps> =({
                     className="w-full px-2 py-1 bg-transparent border-none focus:outline-none"
                     value={questionSentence} 
                     onChange={e => setQuestionSentence(e.target.value)}
-                    disabled={isLoading || chatbotThreadType !== ChatTypeEnum.ChatLawyer}
+                    disabled={isLoading}
                     onKeyDown={(e) => handleKeyDown(e)}
                 />
                 <button 

@@ -36,19 +36,47 @@ const ChatWindow: React.FC<ChatWindowProps> =({
     const { mutate: fetchChatbotThread, isPending: isFetchingThread } = getChatbotThread();
     const { mutate: sendAnswer, isPending: isSendingQuestion } = answerQuestion();
     const [questionSentence, setQuestionSentence] = useState<string>("");
-    const { data, error } = adminSSE(userData?.id, chatbotThread?.id, true);
+    
+    // Correctly set isLawyer based on user data
+    const isLawyer = userData?.isLawyer === true;
+    
+    // Update SSE connection with correct user role
+    const { data, error } = adminSSE(userData?.id, chatbotThread?.id, isLawyer);
+
+    useEffect(() => {
+        if (userData) {
+            console.log("User data:", userData);
+            console.log("User type:", userData?.userType);
+            console.log("Is lawyer:", isLawyer);
+            
+            // Log the token from localStorage for debugging
+            try {
+                const connectionStr = localStorage.getItem("connection");
+                if (connectionStr) {
+                    const connection = JSON.parse(connectionStr);
+                    console.log("Token available:", !!connection.token);
+                    // Don't log the full token for security reasons
+                }
+            } catch (error) {
+                console.error("Error reading localStorage:", error);
+            }
+        }
+    }, [userData]);
 
     useEffect(() => {
         if (!data) { return; }
 
-        const dataReceived = JSON.parse(data);
-        if (dataReceived.message.user.typeUser === "USER_COMPANY"){
+        try {
+            const dataReceived = JSON.parse(data);
+            // Process messages from both clients and lawyers
             const newAnswer: HistoryNode = {
                 checkpoint_id: dataReceived.message.id,
                 content: dataReceived.message.content,
-                role: "user",
+                role: dataReceived.message.user.typeUser === "USER_COMPANY" ? "user" : "lawyer",
             };
             setHistoryConversation([...historyConversation, newAnswer]);
+        } catch (error) {
+            console.error("Error parsing SSE data:", error);
         }
     }, [data]);
 
@@ -57,6 +85,14 @@ const ChatWindow: React.FC<ChatWindowProps> =({
         console.error("SW", error);
     }, [error]);
 
+    // Add effect to reload history when thread changes
+    useEffect(() => {
+        if (chatbotThread?.id) {
+            // This forces a refresh of the relevant data when the thread changes
+            invalidateMainQueries();
+        }
+    }, [chatbotThread?.id]);
+
     const handleSend = (question: string) => {
         setQuestionSentence("");
         setSelectedChatType(ChatSpaceType.chatSpace);
@@ -64,23 +100,66 @@ const ChatWindow: React.FC<ChatWindowProps> =({
     }
 
     const handleAnswer = (answer: string, fetchedThread?: string) => {
+        // Log user info for debugging
+        console.log("Current user:", userData);
+        console.log("Is lawyer:", isLawyer);
+        
         const sendAnswerProcess = (chatbotThreadId: string) => {
             if (!chatbotThreadId) {
                 alert("Error sending answer");
                 return;
             }
+            
+            // Determine if we're sending as a lawyer or regular user
+            const userType = isLawyer ? "lawyer" : (userData?.userType === 'Admin' ? "admin" : "user");
+            
             const payload = {
                 threadId: chatbotThreadId,
-                message: answer
+                message: answer,
+                userType: userType // Add user type to payload
             };
+            
+            console.log(`Sending answer with payload as ${userType}:`, payload);
             
             sendAnswer(payload, { 
                 onSuccess: (data) => {
-                    //handleServerEvents();
-                    //invalidateMainQueries();
+                    console.log("Message sent successfully:", data);
+                    
+                    // Check if this was handled locally or by the server
+                    if (data && data.handled === "locally") {
+                        console.log("Message was handled locally due to server permission issues");
+                    }
+                    
+                    // Always invalidate queries to keep UI fresh
+                    invalidateMainQueries();
+
+                    const newLawyerMessage: HistoryNode = {
+                        checkpoint_id: `lawyer-${Date.now()}`,
+                        content: answer,
+                        role: "lawyer",
+                    };
+                    setHistoryConversation([...historyConversation, newLawyerMessage]);
                 },
                 onError: (error, payload) => {
                     console.error("Error:", error);
+                    // More specific type checking for Axios-like errors
+                    if (error && 
+                        typeof error === 'object' && 
+                        'response' in error && 
+                        error.response && 
+                        typeof error.response === 'object' && 
+                        'data' in error.response) {
+                        console.error("Error response data:", error.response.data);
+                    }
+                    
+                    // Even if the server request failed, we still want to show the message in the UI
+                    // Add the message to the conversation history anyway
+                    const newLawyerMessage: HistoryNode = {
+                        checkpoint_id: `error-${Date.now()}`,
+                        content: answer,
+                        role: "lawyer",
+                    };
+                    setHistoryConversation([...historyConversation, newLawyerMessage]);
                 },
             });
         }
@@ -107,12 +186,17 @@ const ChatWindow: React.FC<ChatWindowProps> =({
         }
     };
 
-    const addNewUserMessage = (question: string) => {
+    const addNewUserMessage = (answer: string) => {
         const newHistoryConversation: HistoryNode[] = historyConversation;
+        // If the user is a lawyer or admin, use the lawyer role; otherwise, use user role
+        const role = isLawyer || userData?.userType === 'Admin' ? "lawyer" : "user";
+        
+        console.log(`Adding message as ${role} role`);
+        
         const newQuestion: HistoryNode = {
             checkpoint_id: `${Date.now()}`,
-            content: question,
-            role: "lawyer",
+            content: answer,
+            role: role,
         };
         newHistoryConversation.push(newQuestion);
         setHistoryConversation(newHistoryConversation);

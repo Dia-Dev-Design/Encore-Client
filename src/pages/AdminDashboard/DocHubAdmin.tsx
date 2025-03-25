@@ -2,13 +2,13 @@ import React from "react";
 import AdminLayout from "components/common/layouts/AdminLayout";
 import { userSidebarOption } from "consts/dashboard.const";
 import { HeaderTitle } from "interfaces/dashboard/headerTitle.enum";
-import { getUser } from "api/dashboard.api";
+import { getAdminUser } from "api/dashboard.api";
 import { ViewProps } from "interfaces/dashboard/viewProps.interface";
 import DocHub from "components/userDashboard/DocHub";
 
 
 const AdminDocHubView: React.FC<ViewProps> = ({isSideBarCollapsed, setIsSideBarCollapsed}) => {
-    const { data, isLoading } = getUser();
+    const { data, isLoading } = getAdminUser();
 
     return (
         <AdminLayout 

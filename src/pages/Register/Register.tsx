@@ -185,10 +185,10 @@ const Register: React.FC = () => {
                     <S.Button onClick = {() => handleSubmit()}>Create Account</S.Button>
                 </S.Form>
                 <S.Separator>&nbsp; Or sign up with &nbsp;</S.Separator>
-                <S.GoogleButton onClick={handleRegisterWithGoogle}>
+                {/* <S.GoogleButton onClick={handleRegisterWithGoogle}>
                     <S.GoogleIcon src={GoogleLogoImage} alt="Google" />
                     Google
-                </S.GoogleButton>
+                </S.GoogleButton> */}
                 <S.RegisterContainer>
                     <S.Label>Already have an account?</S.Label>
                     <S.LabelButton onClick={handleRedirectToLogin}>Log In</S.LabelButton>

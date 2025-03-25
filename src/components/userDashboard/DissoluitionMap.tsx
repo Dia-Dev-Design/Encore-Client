@@ -1,10 +1,12 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Gantt } from "wx-react-gantt";
 import "wx-react-gantt/dist/gantt.css";
 import { Willow } from "wx-react-gantt";
 import { DissolutionStyledWrapper } from "./Dissolution.styled";
 import { getDissolutionTasks, getUser } from "api/dashboard.api";
 import { CompanyResponse } from "interfaces/company/company.interface";
+
+import { useParams } from "react-router-dom";
 
 const columns = [
     { id: "text", header: "Task name", flexGrow: 2, width: 200 },
@@ -79,6 +81,12 @@ type DissolutionRoadmapProps = {
 const DissolutionMap: React.FC = () => {
     const { data: userData } = getUser();
     const { data } = getDissolutionTasks(userData?.companies[0].id ?? "");
+
+    const params = useParams()
+
+    useEffect(() => {
+        console.log("These are the params of where I'm being called======>>", params)
+    }, [])
 
     function parseApiData(apiData: ApiStep[]): ParsedTask[] {
         const parsedTasks: ParsedTask[] = [];

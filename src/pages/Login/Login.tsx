@@ -17,7 +17,8 @@ import { appRoute } from "consts/routes.const";
 import { Connection } from "interfaces/login/connection.interface";
 import { UserType } from "interfaces/login/userType.enum";
 import { useAuth } from "../../context/auth.context";
-
+import { useParams } from "react-router-dom";
+import { useQueryParams } from "helper/query.helper";
 
 const getApiUrl = (path: string) => {
   const base = process.env.REACT_APP_API_BASE_URL || "";
@@ -30,8 +31,8 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ adminLogin }) => {
-  const { storeToken, authenticateUser, setIsAdmin
-   } = useAuth();
+  console.log("This is login isAdmin props", adminLogin);
+  const { storeToken, authenticateUser, setIsAdmin } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,41 +43,7 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
   const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
 
-  useEffect(() => {
-    const handleAuthMessage = (event: MessageEvent) => {
-      const apiOrigin = new URL(process.env.REACT_APP_API_BASE_URL || "")
-        .origin;
-      if (event.origin !== apiOrigin) return;
-
-      try {
-        if (event.data && event.data.token) {
-          const token = event.data.token;
-
-          storeToken(token);
-
-          const connectionToken: Connection = {
-            token: token,
-            userType: UserType.client,
-          };
-
-          authenticateUser();
-        }
-      } catch (error) {
-        console.error("Error processing auth message:", error);
-        setGeneralErrorMessage("Authentication failed. Please try again.");
-        setIsLoading(false);
-      }
-    };
-
-    window.addEventListener("message", handleAuthMessage);
-
-    // Clean up event listener when component unmounts
-    return () => {
-      window.removeEventListener("message", handleAuthMessage);
-    };
-  }, [rememberMe, storeToken, authenticateUser]);
-
-  
+  const params = useQueryParams()
 
   const validateForm = () => {
     const emailError = validateEmail(email);
@@ -89,7 +56,7 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
     return !emailError && !passwordError;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
       handleLogin();
     }
@@ -102,6 +69,8 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
     const url = adminLogin
       ? getApiUrl("auth/admin/login")
       : getApiUrl("auth/login");
+
+    console.log("This is the apiUrl", url)
 
     try {
       const response = await fetch(url, {
@@ -116,16 +85,15 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
       });
 
       const data = await response.json();
-      console.log('this is data after .json------->', data)
+      // console.log('this is data after .json------->', data.isAdmin)
 
       if (data.isAdmin) {
         setIsAdmin(true)
       }
 
-
       if (response.ok) {
         const token = data.accessToken;
-        console.log('This is data on succesful response++++++++>', data);
+        console.log("This is data on succesful response++++++++>", data);
         // Store the token in localStorage via AuthContext
         storeToken(token);
 
@@ -136,7 +104,7 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
           // isAdmin
         };
 
-        console.log("This is the connection Token----->", )
+        // console.log("This is the connection Token----->", )
 
         setLocalItemWithExpiry(
           "connection",
@@ -144,16 +112,14 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
           rememberMe ? 5 : 2
         );
 
-         
-
-        setTimeout (() => {    
+        setTimeout(() => {
           authenticateUser();
-        }, 500) 
+        }, 700);
 
         if (adminLogin) {
           navigate(appRoute.admin.dashboard);
         }
-      } 
+      }
       if (data.error) {
         handleLoginError(data.error);
       }
@@ -187,54 +153,96 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
     navigate(appRoute.generic.forgotPassword);
   };
 
-  const handleLoginWithGoogle = () => {
-    setIsLoading(true);
-    setGeneralErrorMessage("");
+  // const handleLoginWithGoogle = () => {
+  //   setIsLoading(true);
+  //   setGeneralErrorMessage("");
 
-    // Configure popup features for better compatibility
-    const width = 500;
-    const height = 600;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-    const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
+  //   // Configure popup features for better compatibility
+  //   const width = 500;
+  //   const height = 600;
+  //   const left = window.screenX + (window.outerWidth - width) / 2;
+  //   const top = window.screenY + (window.outerHeight - height) / 2;
+  //   const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
 
-    // Open the OAuth popup
-    const popup = window.open(
-      getApiUrl("auth/google"),
-      "googleAuthPopup",
-      features
-    );
+  //   // Open the OAuth popup
+  //   const popup = window.open(
+  //     getApiUrl("auth/google"),
+  //     "googleAuthPopup",
+  //     features
+  //   );
 
-    if (!popup) {
-      setGeneralErrorMessage(
-        "Popup was blocked. Please allow popups for this site."
-      );
-      setIsLoading(false);
-      return;
+  //   if (!popup) {
+  //     setGeneralErrorMessage(
+  //       "Popup was blocked. Please allow popups for this site."
+  //     );
+  //     setIsLoading(false);
+  //     return;
+  //   }
+
+  //   // Set timeout to prevent indefinite loading if user abandons the popup
+  //   const timeout = setTimeout(() => {
+  //     if (popup && !popup.closed) {
+  //       popup.close();
+  //     }
+  //     setGeneralErrorMessage("Authentication timed out. Please try again.");
+  //     setIsLoading(false);
+  //   }, 120000); // 2 minute timeout
+
+  //   // Check periodically if popup was closed without completing auth
+  //   const checkClosed = setInterval(() => {
+  //     if (popup && popup.closed) {
+  //       clearInterval(checkClosed);
+  //       clearTimeout(timeout);
+  //       // Only show error if we're still loading (no successful auth)
+  //       if (isLoading) {
+  //         setGeneralErrorMessage("Authentication was cancelled.");
+  //         setIsLoading(false);
+  //       }
+  //     }
+  //   }, 1000);
+  // };
+
+  useEffect(() => {
+    if (adminLogin) {
+      setIsAdmin(adminLogin)
     }
+  }, []);
 
-    // Set timeout to prevent indefinite loading if user abandons the popup
-    const timeout = setTimeout(() => {
-      if (popup && !popup.closed) {
-        popup.close();
-      }
-      setGeneralErrorMessage("Authentication timed out. Please try again.");
-      setIsLoading(false);
-    }, 120000); // 2 minute timeout
+  useEffect(() => {
+    const handleAuthMessage = (event: MessageEvent) => {
+      const apiOrigin = new URL(process.env.REACT_APP_API_BASE_URL || "")
+        .origin;
+      if (event.origin !== apiOrigin) return;
 
-    // Check periodically if popup was closed without completing auth
-    const checkClosed = setInterval(() => {
-      if (popup && popup.closed) {
-        clearInterval(checkClosed);
-        clearTimeout(timeout);
-        // Only show error if we're still loading (no successful auth)
-        if (isLoading) {
-          setGeneralErrorMessage("Authentication was cancelled.");
-          setIsLoading(false);
+      try {
+        if (event.data && event.data.token) {
+          const token = event.data.token;
+
+          storeToken(token);
+
+          const connectionToken: Connection = {
+            token: token,
+            userType: UserType.client,
+          };
+
+          // authenticateUser();
         }
+      } catch (error) {
+        console.error("Error processing auth message:", error);
+        setGeneralErrorMessage("Authentication failed. Please try again.");
+        setIsLoading(false);
       }
-    }, 1000);
-  };
+    };
+
+    window.addEventListener("message", handleAuthMessage);
+
+    console.log("This is apiUrl ======>", params)
+
+    // Clean up event listener when component unmounts
+    return () => {
+      window.removeEventListener("message", handleAuthMessage);
+    };
+  }, [MessageEvent]);
 
   return (
     <S.Container>
@@ -308,14 +316,14 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
         </S.Form>
         {!adminLogin && (
           <>
-            <S.Separator>&nbsp; Or sign up with &nbsp;</S.Separator>
-            <S.GoogleButton
+            {/* <S.Separator>&nbsp; Or sign up with &nbsp;</S.Separator> */}
+            {/* <S.GoogleButton
               onClick={handleLoginWithGoogle}
               disabled={isLoading}
             >
               <S.GoogleIcon src={GoogleLogoImage} alt="Google" />
               <span>Google</span>
-            </S.GoogleButton>
+            </S.GoogleButton> */}
             <S.RegisterContainer>
               <S.Label>Don't have an account?</S.Label>
               <S.LabelButton

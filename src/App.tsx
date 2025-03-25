@@ -38,7 +38,7 @@ const RedirectIfLoggedIn: React.FC<{
 };
 
 const AppRoutes: React.FC = () => {
-  const { isLoggedIn, isLoading, user } = useAuth();
+  const { isLoggedIn, isLoading, user, isAdmin } = useAuth();
   const [isSideBarCollapsed, setIsSideBarCollapsed] = useState<boolean>(false);
 
   if (isLoading) {
@@ -50,6 +50,13 @@ const AppRoutes: React.FC = () => {
       <Route
         path="/"
         element={
+          isLoggedIn && isAdmin ? (
+            <Navigate to={appRoute.admin.dashboard} replace />
+          ) :
+          isLoggedIn && user?.name === null || isLoggedIn && !user?.name ? (
+            <Navigate to={appRoute.clients.registerProcess} />
+          )
+          : 
           isLoggedIn ? (
             <Navigate to={appRoute.clients.dashboard} replace />
           ) : (

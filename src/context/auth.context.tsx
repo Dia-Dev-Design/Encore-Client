@@ -23,13 +23,13 @@ interface BaseUser {
   isAdmin: boolean
 }
 
-interface RegularUser extends BaseUser {
+export interface RegularUser extends BaseUser {
   isAdmin: false;
   hasRegisteredCompanies?: boolean;
   companies?: any[];
 }
 
-interface AdminUser extends BaseUser {
+export interface AdminUser extends BaseUser {
   isAdmin: true;
 }
 
@@ -38,6 +38,7 @@ type User = RegularUser | AdminUser;
 interface AuthContextType {
   isLoggedIn: boolean;
   isLoading: boolean;
+  isAdmin: boolean,
   user: User | null;
   storeToken: (token: string) => void;
   authenticateUser: () => void;
@@ -74,6 +75,12 @@ function AuthProvider({ children }: AuthProviderProps) {
 
   const removeToken = (): void => {
     localStorage.clear();
+  };
+
+  const logOutUser = (): void => {
+    removeToken();
+    authenticateUser();
+    navigate("/login");
   };
 
   const authenticateUser = (): void => {
@@ -118,7 +125,7 @@ function AuthProvider({ children }: AuthProviderProps) {
           // if (userData.hasRegisteredCompanies,
           // )
 
-          console.log("This is the userData=======>", baseUser)
+          console.log("This is the userData=======> hitting auth/me", baseUser)
 
           setIsLoggedIn(true);
           setIsLoading(false);
@@ -152,7 +159,7 @@ function AuthProvider({ children }: AuthProviderProps) {
 
 
         
-        console.log("This is the userData=======>", baseUser)
+        console.log("This is the userData=======> hitting auth/admin/me", baseUser)
 
         setIsLoggedIn(true);
         setIsLoading(false);
@@ -174,11 +181,7 @@ function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const logOutUser = (): void => {
-    removeToken();
-    authenticateUser();
-    navigate("/login");
-  };
+
 
   useEffect(() => {
     authenticateUser();
@@ -190,6 +193,7 @@ function AuthProvider({ children }: AuthProviderProps) {
         isLoggedIn,
         isLoading,
         user,
+        isAdmin,
         storeToken,
         authenticateUser,
         logOutUser,

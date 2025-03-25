@@ -10,8 +10,13 @@ import { parseCompany } from "utils/functions";
 import { useNavigate } from "react-router-dom";
 import { getLocalItem, setLocalItemWithExpiry } from "helper/localStorage.helper";
 import { appRoute } from "consts/routes.const";
+import { useAuth } from "context/auth.context";
+
+import { RegularUser } from "context/auth.context";
+
 
 const RegisterWizard: React.FC = () => {
+    const { user } = useAuth()
     const navigate = useNavigate();
     const steps = ["Basic Info", "Company Details", "Company Status", "Call Schedule"];
     const [userData, setUserData] = useState<User>();
@@ -54,9 +59,9 @@ const RegisterWizard: React.FC = () => {
     };
 
     useEffect(() => {
-        const jsonUser = getLocalItem("user");
-        if (jsonUser){
-            setUserData(JSON.parse(jsonUser));
+        // const jsonUser = getLocalItem("user");
+        if (user){
+            setUserData(user as unknown as User)
         } else {
             alert("There is no active registration process");
             navigate(appRoute.clients.register);

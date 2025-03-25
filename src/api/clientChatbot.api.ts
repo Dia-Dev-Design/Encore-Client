@@ -34,7 +34,7 @@ export const answerQuestion = () =>
         console.log("Sending message:", params);
         
         // Special handling for admin users - use the direct admin endpoint
-        if (params.userType === 'admin' || params.userType === '') {
+        if (params.userType === 'admin' || params.userType === 'lawyer') {
             console.log("Using admin direct message endpoint");
             try {
                 const response = await apiClient.post(

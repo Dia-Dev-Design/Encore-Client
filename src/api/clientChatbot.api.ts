@@ -34,7 +34,7 @@ export const answerQuestion = () =>
         console.log("Sending message:", params);
         
         // Special handling for admin users - use the direct admin endpoint
-        if (params.userType === 'admin' || params.userType === 'lawyer') {
+        if (params.userType === 'admin' || params.userType === '') {
             console.log("Using admin direct message endpoint");
             try {
                 const response = await apiClient.post(
@@ -348,15 +348,33 @@ export const requestALawyer = () =>
         },
     });
 
-export function getCategoriesAndChats(key: string) {
-    return useQuery({
-        queryKey: [key],
-        queryFn: async ({ signal }) => {
-            const response = await apiClient.get('/api/chatbot/threads/all', { signal });
-            return unwrapAxiosResponse(response);
-        }
-    });
-}
+    export function getCategoriesAndChats(key: string) {
+        return useQuery({
+            queryKey: [key],
+            queryFn: async ({ signal }) => {
+                const response = await apiClient.get('/api/chatbot/threads/all', { signal });
+                const data = unwrapAxiosResponse(response);
+                
+                // Sort threads in each category by updatedAt timestamp (newest first)
+                if (data.uncategorized && data.uncategorized.threads) {
+                    data.uncategorized.threads.sort((a: any, b: any) => 
+                        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+                }
+                
+                // Sort threads in each category
+                if (data.categories) {
+                    data.categories.forEach((category: any) => {
+                        if (category.threads) {
+                            category.threads.sort((a: any, b: any) => 
+                                new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+                        }
+                    });
+                }
+                
+                return data;
+            }
+        });
+    }
 
 export function getPreviousChats(key: string) {
     return useQuery({

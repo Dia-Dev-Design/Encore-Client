@@ -1,14 +1,20 @@
 import secureLocalStorage from "react-secure-storage";
+import React from "react";
+
+
 
 export const setLocalItemWithExpiry = (key: string, value: any, expiryInDays: number) => {
+
+
     const now = new Date();
     const expiryTime = now.getTime() + expiryInDays * 24 * 60 * 60 * 1000;
 
+    
     const item = {
         value: value,
         expiry: expiryTime,
     };
-
+    
     if (key === "connection" || key === "isAdminLoggedIn") {
         console.log(`Setting ${key} in localStorage:`, JSON.stringify(item));
     }

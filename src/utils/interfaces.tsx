@@ -1,4 +1,5 @@
 import { CountryCode } from "libphonenumber-js";
+import { industryOptions } from "./constants";
 
 export interface CountryData {
     code: CountryCode;
@@ -62,10 +63,10 @@ export interface CallScheduleData {
     callScheduled: boolean;
 }
 
-export interface IndustryData {
-    id: string,
-    name: string
-}
+// export interface IndustryData {
+//     id: string,
+//     name: string
+// }
 
 export interface TimeZone {
     value: string,
@@ -75,3 +76,5 @@ export interface TimeZone {
     text: string,
     utc: string[]
 }
+
+export type Industry = typeof industryOptions[number]

@@ -16,6 +16,7 @@ import { UploadFileToChatParams } from "interfaces/clientDashboard/UploadFileToC
 import { ChatTypeEnum } from "interfaces/clientDashboard/chatType.enum";
 import { getUser } from "api/dashboard.api";
 import adminSSE from "components/clients/company/ai-chatbot/adminSSE";
+import { useParams } from "react-router-dom";
 
 interface ChatSectionProps {
     historyConversation: HistoryNode[];
@@ -55,7 +56,15 @@ const ChatSection: React.FC<ChatSectionProps> =({
     
     const [localHistoryConversation, setLocalHistoryConversation] = useState<HistoryNode[]>([]);
 
-     const previousThreadIdRef = useRef<string | undefined>(undefined);
+     const previousThreadIdRef = useRef<string | undefined>(undefined);    
+     
+     const params = useParams()
+
+     useEffect(() => {
+         console.log("These are the params of where I'm being called======>>", params)
+     }, [])
+
+
     
     useEffect(() => {
         // Keep track of the current thread ID to detect changes

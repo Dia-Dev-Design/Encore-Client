@@ -6,9 +6,10 @@ import { countries, states } from "utils/constants";
 import {
   BasicInfoData,
   CountryData,
-  IndustryData,
   User,
+  Industry
 } from "utils/interfaces";
+import { industryOptions } from "utils/constants";
 import { getLocalItem } from "helper/localStorage.helper";
 import axios from "axios";
 
@@ -27,13 +28,10 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
   const dropdownStateRef = useRef<HTMLDivElement>(null);
   const dropdownCountryRef = useRef<HTMLDivElement>(null);
   const [userData, setUserData] = useState<User>();
-  const [industries, setindustries] = useState<IndustryData[]>([]);
+  const [industries, setIndustries] = useState<Industry[]>([]);
   const [accessToken, setAccessToken] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
-  const [selectedIndustry, setSelectedIndustry] = useState<IndustryData>({
-    id: "",
-    name: "",
-  });
+  const [selectedIndustry, setSelectedIndustry] = useState<Industry | ''>('');
   const [fullNameErrorMessage, setFullNameErrorMessage] = useState<string>("");
   const [countryCodeErrorMessage, setCountryCodeErrorMessage] =
     useState<string>("");
@@ -95,10 +93,10 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
           .replace("+", "")
           .replace(selectedCountry.callingCode, "")
       );
-      const industry = industries.find(
-        (industry) => industry.id === dataReceived.industryId
-      );
-      setSelectedIndustry(industry || { id: "", name: "" });
+      // const industry = industries.find(
+      //   (industry) => industry.id === dataReceived.industryId
+      // );
+      setSelectedIndustry('');
       setSelectedCompanyStatesOptions(basicInfoData.states);
       if (basicInfoData.otherCountries) {
         setSelectedCompanyCountriesOptions(basicInfoData.otherCountries);
@@ -111,39 +109,39 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
     }
   };
 
-  const getIndustriesData = async (accessToken: string): Promise<any> => {
-    console.log(
-      "This is our industries endpoint====>",
-      process.env.REACT_APP_API_BASE_URL + "api/industries"
-    );
-    try {
-      console.log("Fetching industries data...");
-      const response = await axios.get(
-        process.env.REACT_APP_API_BASE_URL + "api/industries",
-        {
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
+  // const getIndustriesData = async (accessToken: string): Promise<any> => {
+  //   console.log(
+  //     "This is our industries endpoint====>",
+  //     process.env.REACT_APP_API_BASE_URL + "api/industries"
+  //   );
+  //   try {
+  //     console.log("Fetching industries data...");
+  //     const response = await axios.get(
+  //       process.env.REACT_APP_API_BASE_URL + "api/industries",
+  //       {
+  //         headers: {
+  //           Accept: "application/json",
+  //           Authorization: `Bearer ${accessToken}`,
+  //         },
+  //       }
+  //     );
 
-      // const response = await fetch(process.env.REACT_APP_API_BASE_URL+"api/industries", {
-      //     method: "GET",
-      //     headers: { "Accept": "application/json", "Authorization":  "Bearer "+accessToken || "" },
-      // });
+  //     // const response = await fetch(process.env.REACT_APP_API_BASE_URL+"api/industries", {
+  //     //     method: "GET",
+  //     //     headers: { "Accept": "application/json", "Authorization":  "Bearer "+accessToken || "" },
+  //     // });
 
-      if (response.status !== 200) {
-        throw new Error("Error gathering data");
-      }
-      const dataReceived: IndustryData[] = await response.data;
-      setindustries([...dataReceived]);
-      return response
-    } catch (error) {
-      console.error("Failed to gather data:", error);
-      return error
-    }
-  };
+  //     if (response.status !== 200) {
+  //       throw new Error("Error gathering data");
+  //     }
+  //     const dataReceived: IndustryData[] = await response.data;
+  //     setindustries([...dataReceived]);
+  //     return response
+  //   } catch (error) {
+  //     console.error("Failed to gather data:", error);
+  //     return error
+  //   }
+  // };
 
   // export const post = (route, body) => {
   //     let token = localStorage.getItem("authToken");
@@ -164,13 +162,9 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
   };
 
   const handleIndustryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedIndustry(
-      industries.find((industry) => industry.id === e.target.value) || {
-        id: "",
-        name: "",
-      }
-    );
-    setBasicInfoData({ ...basicInfoData, industryId: e.target.value });
+    const value = e.target.value as Industry;
+    setSelectedIndustry(value);
+    setBasicInfoData({ ...basicInfoData, industryId: value });
   };
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -247,11 +241,11 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
   };
 
   useEffect(() => {
-    const getIndustries = async () => {
+    const getUserData = async () => {
       const jsonUser = getLocalItem("user");
       // const jsonCompany = getLocalItem('company');
       if (jsonUser) {
-        const tempUser = await JSON.parse(jsonUser);
+        const tempUser = JSON.parse(jsonUser);
         console.log(
           "this is tempuser and company+++++>",
           tempUser,
@@ -259,6 +253,7 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
           basicInfoData
         );
         setUserData(tempUser);
+        console.log("This is data temp")
         setAccessToken(tempUser.accessToken);
 
         console.log(
@@ -269,19 +264,23 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
         );
 
         if (accessToken) {
-          const response = await getIndustriesData(
-            accessToken
-          );
-          console.log("This is our response in industries useEffect", response.data);
-          if (response.data) {
+          // const response = await getIndustriesData(
+          //   accessToken
+          // );
+          // console.log("This is our response in industries useEffect", response.data);
+          // if (response.data) {
             // const tempCompany = JSON.parse(jsonCompany)
             getStep1Data(accessToken, basicInfoData.companyName);
           }
         }
-      }
-    };
-    getIndustries();
+    }
+    
+    getUserData();
   }, [accessToken]);
+
+  useEffect(() =>{
+    setIndustries(industryOptions)
+  }, [])
 
   useEffect(() => {
     document.addEventListener("click", handleClickOutside);
@@ -450,16 +449,16 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
             Industry type <span className="required">*</span>
           </S.Label>
           <S.NormalDropdown
-            value={selectedIndustry.id}
+            value={selectedIndustry}
             onChange={handleIndustryChange}
             hasErrors={industryTypeErrorMessage != ""}
           >
             <S.NormalOption value="" disabled>
               Select an Industry
             </S.NormalOption>
-            {industries.map((industry: IndustryData) => (
-              <S.NormalOption key={industry.id} value={industry.id}>
-                {industry.name}
+            {industries.map((industry: Industry) => (
+              <S.NormalOption key={industry} value={industry}>
+                {industry}
               </S.NormalOption>
             ))}
           </S.NormalDropdown>

@@ -16,6 +16,9 @@ import { Company, User } from "utils/interfaces";
 import { appRoute } from "consts/routes.const";
 import { Connection } from "interfaces/login/connection.interface";
 import { UserType } from "interfaces/login/userType.enum";
+import { useAuth } from "../../context/auth.context";
+import { useParams } from "react-router-dom";
+import { useQueryParams } from "helper/query.helper";
 
 const getApiUrl = (path: string) => {
   const base = process.env.REACT_APP_API_BASE_URL || "";
@@ -24,16 +27,12 @@ const getApiUrl = (path: string) => {
 };
 
 interface LoginProps {
-  setIsAdminLoggedIn: (isLogged: boolean) => void;
-  setIsLoggedIn: (isLogged: boolean) => void;
   adminLogin?: boolean;
 }
 
-const Login: React.FC<LoginProps> = ({
-  setIsAdminLoggedIn,
-  setIsLoggedIn,
-  adminLogin,
-}) => {
+const Login: React.FC<LoginProps> = ({ adminLogin }) => {
+  console.log("This is login isAdmin props", adminLogin);
+  const { storeToken, authenticateUser, setIsAdmin } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,128 +43,7 @@ const Login: React.FC<LoginProps> = ({
   const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
 
-  useEffect(() => {
-    // Set up event listener for messages from popup
-    const handleAuthMessage = (event: MessageEvent) => {
-      // Verify origin matches our API for security
-      const apiOrigin = new URL(process.env.REACT_APP_API_BASE_URL || "")
-        .origin;
-      if (event.origin !== apiOrigin) return;
-
-      try {
-        if (event.data && event.data.token) {
-          const connectionToken: Connection = {
-            token: event.data.token,
-            userType: UserType.client,
-          };
-
-          setLocalItemWithExpiry(
-            "connection",
-            JSON.stringify(connectionToken),
-            rememberMe ? 5 : 2
-          );
-
-          checkUserStatus(connectionToken);
-        }
-      } catch (error) {
-        console.error("Error processing auth message:", error);
-        setGeneralErrorMessage("Authentication failed. Please try again.");
-        setIsLoading(false);
-      }
-    };
-
-    window.addEventListener("message", handleAuthMessage);
-
-    // Clean up event listener when component unmounts
-    return () => {
-      window.removeEventListener("message", handleAuthMessage);
-    };
-  }, [rememberMe]);
-
-  const checkUserStatus = async (connectionToken: Connection) => {
-    try {
-      const response = await fetch(getApiUrl("auth/me"), {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          Authorization: "Bearer " + connectionToken.token || "",
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.hasRegisteredCompanies) {
-          // if (!data.isVerified) {
-          //     alert("Please verify your email address before logging in.");
-          //     cleanlocalStorage();
-          //     return;
-          // }
-          setLocalItemWithExpiry(
-            "isLoggedIn",
-            String(true),
-            rememberMe ? 5 : 2
-          );
-          setIsLoggedIn(true);
-          navigate(appRoute.clients.dashboard);
-        } else {
-          setUserData(data, connectionToken.token);
-          if (data && data.companies && data.companies.length > 0) {
-            setCompanyData(data.companies[data.companies.length - 1]);
-          }
-          navigate(appRoute.clients.registerProcess);
-        }
-      } else {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || "Error gathering data. Please try again."
-        );
-        // cleanlocalStorage();
-        // alert("Error gathering data. Please try again.");
-        // console.error(errorMessage);
-        // navigate(appRoute.clients.login);
-      }
-    } catch (error) {
-      console.error("Error gathering data.", error);
-      cleanlocalStorage();
-      // alert("Error gathering data. Please try again.");
-      setGeneralErrorMessage("Error gathering data. Please try again.");
-      navigate(appRoute.clients.login);
-    }
-  };
-
-  const setUserData = (data: any, accessToken: string) => {
-    let user: User = {
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      phoneNumber: data.phoneNumber,
-      lastPasswordChange: data.lastPasswordChange,
-      isVerified: data.isVerified,
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
-      accessToken: accessToken,
-    };
-    setLocalItemWithExpiry("user", JSON.stringify(user), 2);
-  };
-
-  const setCompanyData = (data: any) => {
-    const company: Company = {
-      id: data.id,
-      name: data?.name || "",
-      industryId: data?.industryId || "",
-      parentCompanyId: data?.parentCompanyId || null,
-      structure: data?.structure || null,
-      currentStage: data?.currentStage || null,
-      hasRaisedCapital: data?.hasRaisedCapital || null,
-      hasW2Employees: data?.hasW2Employees || null,
-      hasCompletedSetup: false,
-    };
-    setLocalItemWithExpiry(
-      "company",
-      JSON.stringify(company),
-      rememberMe ? 5 : 2
-    );
-  };
+  const params = useQueryParams()
 
   const validateForm = () => {
     const emailError = validateEmail(email);
@@ -178,7 +56,7 @@ const Login: React.FC<LoginProps> = ({
     return !emailError && !passwordError;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
       handleLogin();
     }
@@ -191,6 +69,8 @@ const Login: React.FC<LoginProps> = ({
     const url = adminLogin
       ? getApiUrl("auth/admin/login")
       : getApiUrl("auth/login");
+
+    console.log("This is the apiUrl", url)
 
     try {
       const response = await fetch(url, {
@@ -205,14 +85,26 @@ const Login: React.FC<LoginProps> = ({
       });
 
       const data = await response.json();
+      // console.log('this is data after .json------->', data.isAdmin)
+
+      if (data.isAdmin) {
+        setIsAdmin(true)
+      }
 
       if (response.ok) {
         const token = data.accessToken;
+        console.log("This is data on succesful response++++++++>", data);
+        // Store the token in localStorage via AuthContext
+        storeToken(token);
 
+        // Additional connection info if needed
         let connectionToken: Connection = {
           token: token,
           userType: adminLogin ? UserType.admin : UserType.client,
+          // isAdmin
         };
+
+        // console.log("This is the connection Token----->", )
 
         setLocalItemWithExpiry(
           "connection",
@@ -220,24 +112,16 @@ const Login: React.FC<LoginProps> = ({
           rememberMe ? 5 : 2
         );
 
-        if (adminLogin) {
-          setIsAdminLoggedIn(true);
-          setLocalItemWithExpiry(
-            "isAdminLoggedIn",
-            String(true),
-            rememberMe ? 5 : 1
-          );
+        setTimeout(() => {
+          authenticateUser();
+        }, 700);
 
-          // setIsAdminLoggedIn(true);
+        if (adminLogin) {
           navigate(appRoute.admin.dashboard);
-        } else {
-          // connectionToken.userType = UserType.client;
-          // setLocalItemWithExpiry("token", token, 0.5);
-          checkUserStatus(connectionToken);
         }
-        // setLocalItemWithExpiry("connection", JSON.stringify(connectionToken), 2);
-      } else {
-        handleLoginError(data.message);
+      }
+      if (data.error) {
+        handleLoginError(data.error);
       }
     } catch (error) {
       console.error("Error during login:", error);
@@ -269,54 +153,96 @@ const Login: React.FC<LoginProps> = ({
     navigate(appRoute.generic.forgotPassword);
   };
 
-  const handleLoginWithGoogle = () => {
-    setIsLoading(true);
-    setGeneralErrorMessage("");
+  // const handleLoginWithGoogle = () => {
+  //   setIsLoading(true);
+  //   setGeneralErrorMessage("");
 
-    // Configure popup features for better compatibility
-    const width = 500;
-    const height = 600;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-    const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
+  //   // Configure popup features for better compatibility
+  //   const width = 500;
+  //   const height = 600;
+  //   const left = window.screenX + (window.outerWidth - width) / 2;
+  //   const top = window.screenY + (window.outerHeight - height) / 2;
+  //   const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
 
-    // Open the OAuth popup
-    const popup = window.open(
-      getApiUrl("auth/google"),
-      "googleAuthPopup",
-      features
-    );
+  //   // Open the OAuth popup
+  //   const popup = window.open(
+  //     getApiUrl("auth/google"),
+  //     "googleAuthPopup",
+  //     features
+  //   );
 
-    if (!popup) {
-      setGeneralErrorMessage(
-        "Popup was blocked. Please allow popups for this site."
-      );
-      setIsLoading(false);
-      return;
+  //   if (!popup) {
+  //     setGeneralErrorMessage(
+  //       "Popup was blocked. Please allow popups for this site."
+  //     );
+  //     setIsLoading(false);
+  //     return;
+  //   }
+
+  //   // Set timeout to prevent indefinite loading if user abandons the popup
+  //   const timeout = setTimeout(() => {
+  //     if (popup && !popup.closed) {
+  //       popup.close();
+  //     }
+  //     setGeneralErrorMessage("Authentication timed out. Please try again.");
+  //     setIsLoading(false);
+  //   }, 120000); // 2 minute timeout
+
+  //   // Check periodically if popup was closed without completing auth
+  //   const checkClosed = setInterval(() => {
+  //     if (popup && popup.closed) {
+  //       clearInterval(checkClosed);
+  //       clearTimeout(timeout);
+  //       // Only show error if we're still loading (no successful auth)
+  //       if (isLoading) {
+  //         setGeneralErrorMessage("Authentication was cancelled.");
+  //         setIsLoading(false);
+  //       }
+  //     }
+  //   }, 1000);
+  // };
+
+  useEffect(() => {
+    if (adminLogin) {
+      setIsAdmin(adminLogin)
     }
+  }, []);
 
-    // Set timeout to prevent indefinite loading if user abandons the popup
-    const timeout = setTimeout(() => {
-      if (popup && !popup.closed) {
-        popup.close();
-      }
-      setGeneralErrorMessage("Authentication timed out. Please try again.");
-      setIsLoading(false);
-    }, 120000); // 2 minute timeout
+  useEffect(() => {
+    const handleAuthMessage = (event: MessageEvent) => {
+      const apiOrigin = new URL(process.env.REACT_APP_API_BASE_URL || "")
+        .origin;
+      if (event.origin !== apiOrigin) return;
 
-    // Check periodically if popup was closed without completing auth
-    const checkClosed = setInterval(() => {
-      if (popup && popup.closed) {
-        clearInterval(checkClosed);
-        clearTimeout(timeout);
-        // Only show error if we're still loading (no successful auth)
-        if (isLoading) {
-          setGeneralErrorMessage("Authentication was cancelled.");
-          setIsLoading(false);
+      try {
+        if (event.data && event.data.token) {
+          const token = event.data.token;
+
+          storeToken(token);
+
+          const connectionToken: Connection = {
+            token: token,
+            userType: UserType.client,
+          };
+
+          // authenticateUser();
         }
+      } catch (error) {
+        console.error("Error processing auth message:", error);
+        setGeneralErrorMessage("Authentication failed. Please try again.");
+        setIsLoading(false);
       }
-    }, 1000);
-  };
+    };
+
+    window.addEventListener("message", handleAuthMessage);
+
+    console.log("This is apiUrl ======>", params)
+
+    // Clean up event listener when component unmounts
+    return () => {
+      window.removeEventListener("message", handleAuthMessage);
+    };
+  }, [MessageEvent]);
 
   return (
     <S.Container>
@@ -390,16 +316,16 @@ const Login: React.FC<LoginProps> = ({
         </S.Form>
         {!adminLogin && (
           <>
-            <S.Separator>&nbsp; Or sign up with &nbsp;</S.Separator>
-            <S.GoogleButton
+            {/* <S.Separator>&nbsp; Or sign up with &nbsp;</S.Separator> */}
+            {/* <S.GoogleButton
               onClick={handleLoginWithGoogle}
               disabled={isLoading}
             >
               <S.GoogleIcon src={GoogleLogoImage} alt="Google" />
               <span>Google</span>
-            </S.GoogleButton>
+            </S.GoogleButton> */}
             <S.RegisterContainer>
-              <S.Label>Don’t have an account?</S.Label>
+              <S.Label>Don't have an account?</S.Label>
               <S.LabelButton
                 onClick={handleRedirectToRegister}
                 disabled={isLoading}

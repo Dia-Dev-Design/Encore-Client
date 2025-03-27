@@ -21,3 +21,15 @@ export function getCompanyData(key: string, companyID: string) {
                 .then(unwrapAxiosResponse),
     });
 }
+
+
+export function getAdminUsers(key: string, lawyerID: string, options?: { enabled?: boolean }) {
+    return useQuery({
+        queryKey: [key],
+        queryFn: async ({ signal }) => 
+            apiClient
+                .get(`/api/dochub/assigned-users/${lawyerID}`, {signal,})
+                .then(unwrapAxiosResponse),
+        enabled: options?.enabled !== undefined ? options.enabled : true,
+    });
+}

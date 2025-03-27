@@ -98,8 +98,6 @@ function AuthProvider({ children }: AuthProviderProps) {
         .then((response) => {
           const data = response.data;
 
-          console.log("This is the data from auth/me", data);
-
           const baseUser: RegularUser = {
             accessToken: data.accessToken,
             isAdmin: data.isAdmin || false,
@@ -108,10 +106,9 @@ function AuthProvider({ children }: AuthProviderProps) {
             companies: data.companies,
           };
 
-          console.log("This is the userData=======> hitting auth/me", baseUser);
-
           setIsLoggedIn(true);
           setIsLoading(false);
+          console.log("This is the baseUser", baseUser);
           setUser(baseUser);
         })
         .catch((error) => {
@@ -126,21 +123,11 @@ function AuthProvider({ children }: AuthProviderProps) {
         .then((response) => {
           const data = response.data;
 
-          console.log("Raw admin data from API:", data);
-
           const baseUser: AdminUser = {
             accessToken: data.accessToken,
             isAdmin: true,
-            user: {
-              ...data,
-              name: data.name || (data.user && data.user.name) || "Admin User",
-            },
+            user: data.user,
           };
-
-          console.log(
-            "This is the userData=======> hitting auth/admin/me",
-            baseUser
-          );
 
           setIsLoggedIn(true);
           setIsLoading(false);
@@ -164,22 +151,11 @@ function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     authenticateUser();
     const isAdmin = localStorage.getItem("isAdmin");
-    console.log("Initial isAdmin from localStorage:", isAdmin);
     if (isAdmin === "true") {
       setIsAdmin(true);
-      console.log("Setting isAdmin to true");
     }
   }, []);
 
-  useEffect(() => {
-    console.log("isAdmin state changed:", isAdmin);
-  }, [isAdmin]);
-
-  useEffect(() => {
-    if (user) {
-      console.log("This is the user", user);
-    }
-  }, [user]);
 
   return (
     <AuthContext.Provider

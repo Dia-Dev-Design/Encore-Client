@@ -11,6 +11,7 @@ import { serverURL } from 'utils/constants';
 import { parseUser } from 'utils/functions';
 import { cleanlocalStorage, getLocalItem, setLocalItemWithExpiry } from 'helper/localStorage.helper';
 import { appRoute } from 'consts/routes.const';
+import { useAuth } from 'context/auth.context';
 
 const Register: React.FC = () => {
     const navigate = useNavigate();
@@ -20,6 +21,8 @@ const Register: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [emailErrorMessage, setEmailErrorMessage] = useState("");
     const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
+
+    const { setUser } = useAuth()
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -74,6 +77,8 @@ const Register: React.FC = () => {
 
             // if (response) {
                 const data = await response.data;
+                setUser(response.data)
+
                 console.log("++++++++> this is our axios repsonse", response)
                 setLocalItemWithExpiry("user", JSON.stringify(data.user), 2);
                 console.log("this is parsedUser----->", JSON.stringify(data.user))

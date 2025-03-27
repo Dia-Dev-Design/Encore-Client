@@ -23,6 +23,7 @@ import { useQueryParams } from "helper/query.helper";
 const getApiUrl = (path: string) => {
   const base = process.env.REACT_APP_API_BASE_URL || "";
   const formattedBase = base.endsWith("/") ? base : `${base}/`;
+  console.log('This is the result of getApI url')
   return `${formattedBase}api/${path.replace(/^api\//, "")}`;
 };
 
@@ -43,7 +44,7 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
   const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
 
-  const params = useQueryParams()
+  const { params } = useParams()
 
   const validateForm = () => {
     const emailError = validateEmail(email);
@@ -55,6 +56,8 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
 
     return !emailError && !passwordError;
   };
+
+
 
   const handleSubmit = async () => {
     if (validateForm()) {
@@ -70,7 +73,7 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
       ? getApiUrl("auth/admin/login")
       : getApiUrl("auth/login");
 
-    console.log("This is the apiUrl", url)
+    console.log("This is the apiUrl", params)
 
     try {
       const response = await fetch(url, {
@@ -86,6 +89,7 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
 
       const data = await response.json();
       // console.log('this is data after .json------->', data.isAdmin)
+      console.log("this is data....", data)
 
       if (data.isAdmin) {
         setIsAdmin(true)
@@ -104,7 +108,7 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
           // isAdmin
         };
 
-        // console.log("This is the connection Token----->", )
+        console.log("This is the connection Token----->", connectionToken.userType )
 
         setLocalItemWithExpiry(
           "connection",

@@ -11,20 +11,23 @@ import { useNavigate } from "react-router-dom";
 import { get } from "../utils/api-calls";
 
 interface BaseUser {
-  id?: string;
-  email?: string;
-  name?: string;
-  phoneNumber?: string;
-  lastPasswordChange?: string;
-  isVerified?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-  accessToken?: string;
-  isAdmin: boolean
+  accessToken: string,
+  isAdmin: boolean,
+  user: {    
+    createdAt: string
+    email: string
+    id: string
+    isVerified: boolean
+    lastPasswordChange: string | null
+    name: string
+    password: string
+    phoneNumber: string
+    updatedAt: string
+    isAdmin: boolean;
+  }
 }
 
 export interface RegularUser extends BaseUser {
-  isAdmin: false;
   hasRegisteredCompanies?: boolean;
   companies?: any[];
 }
@@ -43,6 +46,7 @@ interface AuthContextType {
   storeToken: (token: string) => void;
   authenticateUser: () => void;
   logOutUser: () => void;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>
   setIsAdmin: React.Dispatch<React.SetStateAction<boolean>>
 }
 
@@ -94,16 +98,20 @@ function AuthProvider({ children }: AuthProviderProps) {
           const data = response.data;
 
           const baseUser: RegularUser = {
-            id: data.id,
-            email: data.email,
-            name: data.name,
-            phoneNumber: data.phoneNumber,
-            lastPasswordChange: data.lastPasswordChange,
-            isVerified: data.isVerified,
-            createdAt: data.createdAt,
-            updatedAt: data.updatedAt,
             accessToken: data.accessToken,
-            isAdmin: data.isAdmin,
+            isAdmin: false,
+            user: {    
+              createdAt: data.user.createdAt,
+              email: data.user.email,
+              id: data.user.id,
+              isVerified: data.user.isVerified,
+              isAdmin: false,
+              lastPasswordChange: data.user.lastPasswordChange,
+              name: data.user.name,
+              password: data.user.password,
+              phoneNumber: data.user.phoneNumber,
+              updatedAt: data.user.updatedAt
+            }
           };
 
           
@@ -129,7 +137,7 @@ function AuthProvider({ children }: AuthProviderProps) {
 
           setIsLoggedIn(true);
           setIsLoading(false);
-          setUser(baseUser);
+          setUser(data);
         })
         .catch((error) => {
           removeToken();
@@ -145,16 +153,20 @@ function AuthProvider({ children }: AuthProviderProps) {
         const data = response.data;
 
         const baseUser: AdminUser = {
-          id: data.id,
-          email: data.email,
-          name: data.name,
-          phoneNumber: data.phoneNumber,
-          lastPasswordChange: data.lastPasswordChange,
-          isVerified: data.isVerified,
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt,
           accessToken: data.accessToken,
-          isAdmin: data.isAdmin,
+          isAdmin: true,
+          user: {    
+            createdAt: data.user.createdAt,
+            email: data.user.email,
+            id: data.user.id,
+            isAdmin: true,
+            isVerified: data.user.isVerified,
+            lastPasswordChange: data.user.lastPasswordChange,
+            name: data.user.name,
+            password: data.user.password,
+            phoneNumber: data.user.phoneNumber,
+            updatedAt: data.user.updatedAt
+          }
         };
 
 
@@ -198,6 +210,7 @@ function AuthProvider({ children }: AuthProviderProps) {
         authenticateUser,
         logOutUser,
         setIsAdmin,
+        setUser,
       }}
     >
       {children}

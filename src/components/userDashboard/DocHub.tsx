@@ -43,6 +43,7 @@ const DocHub: React.FC = () => {
     page: params.documentPage,
   });
 
+  console.log("thes are data dochub", data)
   const uploadMutation = uploadDocuments();
 
   useEffect(() => {

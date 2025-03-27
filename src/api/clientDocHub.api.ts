@@ -12,6 +12,7 @@ export function getUserDocumentIds(key: string, params: { limit: number; page: n
                     page: params.page,
                 },
             });
+            console.log("these are the respinse and query key ", unwrapAxiosResponse(response), key)
             return unwrapAxiosResponse(response);
         },
     });

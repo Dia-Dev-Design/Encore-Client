@@ -17,6 +17,7 @@ import { RegularUser } from "context/auth.context";
 
 const RegisterWizard: React.FC = () => {
     const { user } = useAuth()
+    console.log("This is the user from Register Wizard", user)
     const navigate = useNavigate();
     const steps = ["Basic Info", "Company Details", "Company Status", "Call Schedule"];
     const [userData, setUserData] = useState<User>();
@@ -63,10 +64,12 @@ const RegisterWizard: React.FC = () => {
         if (user){
             setUserData(user as unknown as User)
         } else {
-            alert("There is no active registration process");
-            navigate(appRoute.clients.register);
+            setTimeout(() => {
+                alert("There is no active registration process");
+                navigate(appRoute.clients.register);          
+            }, 800)
         }
-    }, []);
+    }, [user]);
 
     const saveStepData = async (endpoint: string, data: any, currentStep: number): Promise<boolean> => {
         try {

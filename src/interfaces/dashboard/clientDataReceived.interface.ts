@@ -23,4 +23,10 @@ export interface ClientDataReceived {
         assignedAdminId: string;
         rootFolderId: string | null;
     }];
+    user?: {
+        name: string;
+        id: string;
+        email: string;
+        [key: string]: any;
+    };
 }

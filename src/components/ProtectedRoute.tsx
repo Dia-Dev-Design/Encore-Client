@@ -8,8 +8,9 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  requireAdmin = false,
 }) => {
-  const { isLoggedIn, isLoading, user } = useAuth();
+  const { isLoggedIn, isLoading, user, isAdmin } = useAuth();
 
   if (isLoading) {
     return null;
@@ -17,6 +18,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (!isLoggedIn) {
     return <Navigate to={appRoute.clients.login} />;
+  }
+
+  if (requireAdmin && !isAdmin) {
+    return <Navigate to={appRoute.clients.dashboard} />;
   }
 
   return <Outlet />;

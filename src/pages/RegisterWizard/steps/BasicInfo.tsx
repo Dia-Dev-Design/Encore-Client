@@ -13,10 +13,29 @@ import { industryOptions } from "utils/constants";
 import { getLocalItem } from "helper/localStorage.helper";
 import axios from "axios";
 
+import { useAuth } from "context/auth.context";
+
 interface BasicInfoProps {
   basicInfoData: BasicInfoData;
   setBasicInfoData: (data: BasicInfoData) => void;
   basicInfoErrors: string[];
+}
+
+interface UserData {
+  accessToken: string,
+  isAdmin: boolean,
+  user: {    
+    createdAt: string
+    email: string
+    id: string
+    isAdmin: boolean
+    isVerified: boolean
+    lastPasswordChange: string | null
+    name: string
+    password: string
+    phoneNumber: string
+    updatedAt: string
+  }
 }
 
 const BasicInfo: React.FC<BasicInfoProps> = ({
@@ -27,9 +46,9 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
   const dropdownCountryCodeRef = useRef<HTMLDivElement>(null);
   const dropdownStateRef = useRef<HTMLDivElement>(null);
   const dropdownCountryRef = useRef<HTMLDivElement>(null);
-  const [userData, setUserData] = useState<User>();
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [industries, setIndustries] = useState<Industry[]>([]);
-  const [accessToken, setAccessToken] = useState<string>("");
+  const [accessToken, setAccessToken] = useState<string | undefined>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [selectedIndustry, setSelectedIndustry] = useState<Industry | ''>('');
   const [fullNameErrorMessage, setFullNameErrorMessage] = useState<string>("");
@@ -67,10 +86,13 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
   const toggleCompanyCountriesDropdown = () =>
     setIsCompanyCountriesOpen(!isCompanyCountriesOpen);
 
+  const { user } = useAuth()
+
   const getStep1Data = async (
     accessToken: string,
     companyId: string
   ): Promise<boolean> => {
+    console.log("This is step one data=====>", accessToken, companyId)
     try {
       const response = await fetch(
         process.env.REACT_APP_API_BASE_URL + "api/register/step1/" + companyId,
@@ -242,26 +264,20 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
 
   useEffect(() => {
     const getUserData = async () => {
-      const jsonUser = getLocalItem("user");
+      // const jsonUser = getLocalItem("user");
       // const jsonCompany = getLocalItem('company');
-      if (jsonUser) {
-        const tempUser = JSON.parse(jsonUser);
-        console.log(
-          "this is tempuser and company+++++>",
-          tempUser,
-          "and basicInfoData---->",
-          basicInfoData
-        );
-        setUserData(tempUser);
+      if (user) {
+        // const tempUser = JSON.parse(jsonUser);
+        // console.log(
+        //   "this is tempuser and company+++++>",
+        //   tempUser,
+        //   "and basicInfoData---->",
+        //   basicInfoData
+        // );
+        setUserData(user);
         console.log("This is data temp")
-        setAccessToken(tempUser.accessToken);
+        setAccessToken(user.accessToken);
 
-        console.log(
-          "This is our accesstoken----->",
-          tempUser.accessToken,
-          "and thennnnnnnnnnn jsonuser",
-          userData
-        );
 
         if (accessToken) {
           // const response = await getIndustriesData(
@@ -271,12 +287,15 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
           // if (response.data) {
             // const tempCompany = JSON.parse(jsonCompany)
             getStep1Data(accessToken, basicInfoData.companyName);
+            // setTimeout(() => {
+              
+            // }, 800)
           }
         }
     }
     
     getUserData();
-  }, [accessToken]);
+  }, [user, accessToken, userData]);
 
   useEffect(() =>{
     setIndustries(industryOptions)
@@ -333,7 +352,7 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
       <S.TitleContainer>
         <S.RegisterTitle>Provide your details</S.RegisterTitle>
         <S.EmailRegistered>
-          Your registered email: <span>{userData?.email}</span>
+          Your registered email: <span>{userData?.user.email}</span>
         </S.EmailRegistered>
       </S.TitleContainer>
       <S.Form>

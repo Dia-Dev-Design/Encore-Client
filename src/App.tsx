@@ -41,6 +41,8 @@ const AppRoutes: React.FC = () => {
   const { isLoggedIn, isLoading, user, isAdmin } = useAuth();
   const [isSideBarCollapsed, setIsSideBarCollapsed] = useState<boolean>(false);
 
+  console.log("This is is Admin from App", isAdmin)
+
   if (isLoading) {
     return <Loading />;
   }
@@ -53,7 +55,7 @@ const AppRoutes: React.FC = () => {
           isLoggedIn && isAdmin ? (
             <Navigate to={appRoute.admin.dashboard} replace />
           ) :
-          isLoggedIn && user?.name === null || isLoggedIn && !user?.name ? (
+          isLoggedIn && user?.user.name === null || isLoggedIn && !user?.user.name ? (
             <Navigate to={appRoute.clients.registerProcess} />
           )
           : 

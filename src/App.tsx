@@ -8,6 +8,7 @@ import {
 import "./App.scss";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login/Login";
+import AdminLogin from "./pages/Login/AdminLogin";
 import Register from "./pages/Register/Register";
 import "@fontsource/figtree";
 import "@fontsource/figtree/400.css";
@@ -41,8 +42,6 @@ const AppRoutes: React.FC = () => {
   const { isLoggedIn, isLoading, user, isAdmin } = useAuth();
   const [isSideBarCollapsed, setIsSideBarCollapsed] = useState<boolean>(false);
 
-  console.log("This is is Admin from App", isAdmin)
-
   if (isLoading) {
     return <Loading />;
   }
@@ -54,12 +53,11 @@ const AppRoutes: React.FC = () => {
         element={
           isLoggedIn && isAdmin ? (
             <Navigate to={appRoute.admin.dashboard} replace />
-          ) :
-          isLoggedIn && user?.user.name === null || isLoggedIn && !user?.user.name ? (
+          ) : !isAdmin &&
+            isLoggedIn &&
+            (user?.user.name === null || !user?.user.name) ? (
             <Navigate to={appRoute.clients.registerProcess} />
-          )
-          : 
-          isLoggedIn ? (
+          ) : isLoggedIn ? (
             <Navigate to={appRoute.clients.dashboard} replace />
           ) : (
             <Navigate to={appRoute.clients.login} replace />
@@ -86,7 +84,7 @@ const AppRoutes: React.FC = () => {
         path={appRoute.admin.login}
         element={
           <RedirectIfLoggedIn>
-            <Login adminLogin={true} />
+            <AdminLogin />
           </RedirectIfLoggedIn>
         }
       />
@@ -169,7 +167,7 @@ const AppRoutes: React.FC = () => {
       </Route>
       <Route
         path={appRoute.admin.docHub}
-        element={<ProtectedRoute requireAdmin={true} />}
+        element={<ProtectedRoute requireAdmin={false} />}
       >
         <Route
           index

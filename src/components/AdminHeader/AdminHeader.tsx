@@ -81,7 +81,11 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 
           <div className="flex items-center space-x-2 pr-1 md:pr-6">
             <span className="text-base font-medium font-figtree text-neutrals-black md:text-neutrals-white">
-              {user && user.name ? user.name : "User"}
+              {user && user.name
+                ? user.name
+                : user && user.user && user.user.name
+                ? user.user.name
+                : "User"}
             </span>
             <button
               className="w-10 h-10 rounded-full overflow-hidden"
@@ -110,7 +114,11 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
               className="w-fit h-16 object-cover"
             />
             <p className="font-figtree text-2xl text-primaryMariner-900 font-medium">
-              {user && user.name ? user.name : "User"}
+              {user && user.name
+                ? user.name
+                : user && user.user && user.user.name
+                ? user.user.name
+                : "User"}
             </p>
             <p className="font-figtree text-sm text-primaryMariner-900 font-medium">
               {user.email}

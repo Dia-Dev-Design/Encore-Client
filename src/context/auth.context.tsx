@@ -11,20 +11,20 @@ import { useNavigate } from "react-router-dom";
 import { get } from "../utils/api-calls";
 
 interface BaseUser {
-  accessToken: string,
-  isAdmin: boolean,
-  user: {    
-    createdAt: string
-    email: string
-    id: string
-    isVerified: boolean
-    lastPasswordChange: string | null
-    name: string
-    password: string
-    phoneNumber: string
-    updatedAt: string
+  accessToken: string;
+  isAdmin: boolean;
+  user: {
+    createdAt: string;
+    email: string;
+    id: string;
+    isVerified: boolean;
+    lastPasswordChange: string | null;
+    name: string;
+    password: string;
+    phoneNumber: string;
+    updatedAt: string;
     isAdmin: boolean;
-  }
+  };
 }
 
 export interface RegularUser extends BaseUser {
@@ -41,13 +41,13 @@ type User = RegularUser | AdminUser;
 interface AuthContextType {
   isLoggedIn: boolean;
   isLoading: boolean;
-  isAdmin: boolean,
+  isAdmin: boolean;
   user: User | null;
   storeToken: (token: string) => void;
   authenticateUser: () => void;
   logOutUser: () => void;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>
-  setIsAdmin: React.Dispatch<React.SetStateAction<boolean>>
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  setIsAdmin: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function isAdminUser(user: User | null): user is AdminUser {
@@ -64,7 +64,7 @@ function AuthProvider({ children }: AuthProviderProps) {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false)
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -83,61 +83,33 @@ function AuthProvider({ children }: AuthProviderProps) {
 
   const logOutUser = (): void => {
     removeToken();
-    authenticateUser();
+    setIsLoggedIn(false);
+    setUser(null);
     navigate("/login");
   };
 
   const authenticateUser = (): void => {
     const storedToken: any = localStorage.getItem("authToken");
-    console.log("This is the storedToken-------->", storedToken)
-    console.log("State of is Admin", isAdmin)
+    const storedIsAdmin: any = localStorage.getItem("isAdmin");
+    const isAdminUser = storedIsAdmin === "true";
 
-    if (storedToken && !isAdmin) {
+    if (storedToken && !isAdminUser) {
       get("api/auth/me")
         .then((response) => {
           const data = response.data;
 
           const baseUser: RegularUser = {
             accessToken: data.accessToken,
-            isAdmin: false,
-            user: {    
-              createdAt: data.user.createdAt,
-              email: data.user.email,
-              id: data.user.id,
-              isVerified: data.user.isVerified,
-              isAdmin: false,
-              lastPasswordChange: data.user.lastPasswordChange,
-              name: data.user.name,
-              password: data.user.password,
-              phoneNumber: data.user.phoneNumber,
-              updatedAt: data.user.updatedAt
-            }
+            isAdmin: data.isAdmin || false,
+            user: data,
+            hasRegisteredCompanies: data.hasRegisteredCompanies,
+            companies: data.companies,
           };
-
-          
-
-          // if (data.isAdmin) {
-          //   userData = {
-          //     ...baseUser,
-          //     isAdmin: true
-          //   } as AdminUser;
-          // } else {
-          //   userData = {
-          //     ...baseUser,
-          //     isAdmin: false,
-          //     hasRegisteredCompanies: data.hasRegisteredCompanies,
-          //     companies: data.companies,
-          //   } as RegularUser;
-          // }
-
-          // if (userData.hasRegisteredCompanies,
-          // )
-
-          console.log("This is the userData=======> hitting auth/me", baseUser)
 
           setIsLoggedIn(true);
           setIsLoading(false);
-          setUser(data);
+          console.log("This is the baseUser", baseUser);
+          setUser(baseUser);
         })
         .catch((error) => {
           removeToken();
@@ -146,45 +118,28 @@ function AuthProvider({ children }: AuthProviderProps) {
           setUser(null);
           console.log(error);
         });
-    } else if (storedToken && isAdmin ){
-
+    } else if (storedToken && isAdminUser) {
       get("api/auth/admin/me")
-      .then((response) => {
-        const data = response.data;
+        .then((response) => {
+          const data = response.data;
 
-        const baseUser: AdminUser = {
-          accessToken: data.accessToken,
-          isAdmin: true,
-          user: {    
-            createdAt: data.user.createdAt,
-            email: data.user.email,
-            id: data.user.id,
+          const baseUser: AdminUser = {
+            accessToken: data.accessToken,
             isAdmin: true,
-            isVerified: data.user.isVerified,
-            lastPasswordChange: data.user.lastPasswordChange,
-            name: data.user.name,
-            password: data.user.password,
-            phoneNumber: data.user.phoneNumber,
-            updatedAt: data.user.updatedAt
-          }
-        };
+            user: data.user,
+          };
 
-
-        
-        console.log("This is the userData=======> hitting auth/admin/me", baseUser)
-
-        setIsLoggedIn(true);
-        setIsLoading(false);
-        setUser(baseUser);
-      })
-      .catch((error) => {
-        removeToken();
-        setIsLoggedIn(false);
-        setIsLoading(false);
-        setUser(null);
-        console.log(error);
-      });
-
+          setIsLoggedIn(true);
+          setIsLoading(false);
+          setUser(baseUser);
+        })
+        .catch((error) => {
+          removeToken();
+          setIsLoggedIn(false);
+          setIsLoading(false);
+          setUser(null);
+          console.log(error);
+        });
     } else {
       setIsLoggedIn(false);
       setIsLoading(false);
@@ -193,11 +148,14 @@ function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-
-
   useEffect(() => {
     authenticateUser();
+    const isAdmin = localStorage.getItem("isAdmin");
+    if (isAdmin === "true") {
+      setIsAdmin(true);
+    }
   }, []);
+
 
   return (
     <AuthContext.Provider

@@ -65,7 +65,7 @@ export function getUser() {
 
 export function getAdminUser(): UseQueryResult<any, unknown> {
   return useQuery<any, unknown>({
-    queryKey: ['user'],
+    queryKey: ['admin-user'],
     queryFn: async ({ signal }) => {
       const response = await apiClient.get('/api/auth/admin/me', { signal });
       return unwrapAxiosResponse(response);

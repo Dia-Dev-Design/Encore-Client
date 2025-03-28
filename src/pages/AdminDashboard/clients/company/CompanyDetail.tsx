@@ -5,7 +5,7 @@ import { getAdminUser } from "api/dashboard.api";
 import AdminAIChatbot from "components/clients/company/ai-chatbot/AdminAIChatbot";
 import CallSchedule from "components/clients/company/basic-information/CallSchedule";
 import CompanyInfo from "components/clients/company/basic-information/CompanyInfo";
-import AdminDocHub from "components/clients/company/doc-hub/adminDocHub";
+import DocHub from "components/userDashboard/DocHub";
 import IARequest from "components/clients/company/ia-request/IARequest";
 import AdminLayout from "components/common/layouts/AdminLayout";
 import NavigationTabBar from "components/layouts/NavigationTabBar";
@@ -64,13 +64,8 @@ const CompanyDetail = ({
     },
     {
       key: "4",
-      label: "AI Chatbot",  
-      children: <AdminAIChatbot/>,
-    },
-    {
-      key: "5",
-      label: "Doc Hub",  
-      children: <AdminDocHub/>,
+      label: "AI Chatbot",
+      children: <AdminAIChatbot />,
     },
   ];
 

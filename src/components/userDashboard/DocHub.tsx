@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import DocIcon from "assets/icons/pdf.png";
 import { Params } from "interfaces/clientDashboard/dochub/dochub.interface";
 import { useQueryParams } from "helper/query.helper";
-import { CLIENT_DOCS } from "consts/clientPanel/clientQuery.const";
+import { CLIENT_DOCS, USER_DOCS } from "consts/clientPanel/clientQuery.const";
 import { getUserDocumentIds, uploadDocuments } from "api/clientDocHub.api";
 import PDFThumbnail from "components/clients/company/doc-hub/PDFThumbnail";
 import PDFViewer from "components/clients/company/doc-hub/PDFViewer";
@@ -12,7 +12,10 @@ import "react-pdf/dist/esm/Page/TextLayer.css";
 import "./DocHub.css";
 import { pdfjs } from "react-pdf";
 import { useAuth } from "context/auth.context";
-import { getAdminUsers } from "api/adminDocHub.api";
+import {
+  getAdminUsers,
+  getUserDocumentsWithUrlsByUserId,
+} from "api/adminDocHub.api";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.js`;
 
@@ -61,7 +64,23 @@ const DocHub: React.FC = () => {
       page: params.documentPage,
     },
     {
-      enabled: !isAdmin || false,
+      enabled: (!isAdmin && !selectedUser) || false,
+    }
+  );
+
+  const {
+    data: userDocsData,
+    isLoading: isUserDocsLoading,
+    refetch: refetchUserDocs,
+  } = getUserDocumentsWithUrlsByUserId(
+    USER_DOCS,
+    selectedUser,
+    {
+      limit: params.limit || params.documentLimit,
+      page: params.documentPage,
+    },
+    {
+      enabled: !!selectedUser,
     }
   );
 
@@ -88,9 +107,17 @@ const DocHub: React.FC = () => {
     }
   }, [adminUsers]);
 
-  const data = user?.isAdmin ? adminUsers : clientData;
-  const isLoading = user?.isAdmin ? isAdminLoading : isClientLoading;
-  const refetch = refetchClient;
+  const data = selectedUser
+    ? userDocsData
+    : user?.isAdmin
+    ? adminUsers
+    : clientData;
+  const isLoading = selectedUser
+    ? isUserDocsLoading
+    : user?.isAdmin
+    ? isAdminLoading
+    : isClientLoading;
+  const refetch = selectedUser ? refetchUserDocs : refetchClient;
 
   const uploadMutation = uploadDocuments();
 
@@ -155,6 +182,9 @@ const DocHub: React.FC = () => {
 
   const handleUserChange = (value: string) => {
     setSelectedUser(value);
+    setParams({
+      documentPage: 1,
+    });
   };
 
   return (
@@ -164,7 +194,7 @@ const DocHub: React.FC = () => {
           <div className="border border-[#C2C9CE] rounded-lg flex flex-col h-[calc(100%-3.5rem)]">
             <div className="flex justify-between px-6 py-[14px] items-center border-b border-[#C2C9CE] flex-shrink-0">
               <h3 className="text-2xl font-semibold font-figtree">
-                Uploaded Documents
+                {selectedUser ? "User Documents" : "Uploaded Documents"}
               </h3>
               <div className="flex items-center gap-4">
                 {user?.isAdmin && foundUsers.length > 0 && (

@@ -7,3 +7,4 @@ export const CHAT_HISTORY = "chatHistory";
 export const CHAT_INFO = "chatInfo";
 export const CLIENT_DOCS = "clientDocs";
 export const COMPANY_DATA = "companyData";
+export const USER_DOCS = "userDocs";

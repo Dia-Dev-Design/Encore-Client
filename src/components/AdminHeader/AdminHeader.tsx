@@ -25,6 +25,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
   hideNotifications,
 }) => {
   const [isProfileMenuCollapsed, setIsProfileMenuCollapsed] = useState(false);
+  const [isBugModalOpen, setIsBugModalOpen] = useState(false);
   const { logOutUser } = useAuth();
 
   const handleLogout = () => {
@@ -130,6 +131,12 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
             </button>
             <button
               className="w-full py-2 px-4 text-left text-primaryLinkWater-950"
+              onClick={() => setIsBugModalOpen(true)}
+            >
+              Report a Bug
+            </button>
+            <button
+              className="w-full py-2 px-4 text-left text-primaryLinkWater-950"
               onClick={handleLogout}
             >
               Logout
@@ -138,6 +145,47 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
           <button
             className="absolute right-4 top-4"
             onClick={() => setIsProfileMenuCollapsed(!isProfileMenuCollapsed)}
+          >
+            <img src={BlackXImage} alt="Close" />
+          </button>
+        </div>
+      )}
+      {isBugModalOpen && (
+        <div className="absolute top-20 right-20 w-1/4 bg-neutrals-white border border-greys-300 z-40 h-4/5 flex flex-col">
+          <div className="border border-greys-300 py-2 px-4 h-1/4 flex flex-col items-center justify-center gap-1">
+            <p className="font-figtree text-2xl text-primaryMariner-900 font-medium">
+              {user && user.name
+                ? user.name
+                : user && user.user && user.user.name
+                ? user.user.name
+                : "User"}
+            </p>
+            <br />
+            <hr />
+            <p className="font-figtree text-sm text-primaryMariner-900 font-medium">
+              Please help us with a description of your bug.
+            </p>
+          </div>
+          <div className="border border-greys-300 py-2 px-4 h-3/4">
+            <button className="w-full py-2 px-4 text-left text-primaryLinkWater-950 bg-primaryLinkWater-50">
+              Subject
+            </button>
+            <button
+              className="w-full py-2 px-4 text-left text-primaryLinkWater-950"
+              // onClick={() => setIsBugModalOpen(true)}
+            >
+              Description
+            </button>
+            <button
+              className="w-full py-2 px-4 text-left text-primaryLinkWater-950"
+              onClick={handleLogout}
+            >
+              Submit
+            </button>
+          </div>
+          <button
+            className="absolute right-4 top-4"
+            onClick={() => setIsBugModalOpen(false)}
           >
             <img src={BlackXImage} alt="Close" />
           </button>

@@ -88,7 +88,10 @@ const ClientMetrics: React.FC = () => {
             <MetricCard
               isLoading={isLoading}
               label={"Cost Savings"}
-              total={`$${Math.round(costMetricsData?.costSavings)}`}
+              total={`${(costMetricsData?.costSavings.toLocaleString('en-US', {
+                style: 'currency',
+                currency: 'USD',
+              }))}`}
               changeRate={0}
               tendencyUp={true}
               cardType={MetricCardType.descriptiveCard}

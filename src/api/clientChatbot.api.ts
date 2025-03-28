@@ -147,13 +147,11 @@ export const useStreamQuestion = () =>
         mutationFn: async ({ params, onChunk, onComplete }: StreamQuestionParams) => {
             try {                
                 // Get authentication token using the same approach as apiClient
-                const connection: Connection = JSON.parse(getLocalItem("connection") || '{}');
-                const token = connection.token;
-                                
-                if (isNil(token)) {
+                const token = localStorage.getItem("authToken");
+                
+                if (!token) {
                     throw new Error("Authentication token is missing. Please log in again.");
                 }
-                
                 // Use fetch directly for streaming - it's better suited for this use case
                 const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || ''}api/chatbot/ask/stream`, {
                     method: 'POST',
@@ -249,10 +247,10 @@ async function processStream(reader: ReadableStreamDefaultReader<Uint8Array>, on
 // Keep the original function for backward compatibility
 export const streamQuestion = async (params: Question, onChunk: (chunk: string) => void, onComplete: () => void) => {
     try {
-        const connection: Connection = JSON.parse(getLocalItem("connection") || '{}');
-        const token = connection.token;
+
+        const token = localStorage.getItem("authToken");
                 
-        if (isNil(token)) {
+        if (!token) {
             throw new Error("Authentication token is missing. Please log in again.");
         }
         

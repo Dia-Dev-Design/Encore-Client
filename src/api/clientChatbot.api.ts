@@ -6,9 +6,7 @@ import { MoveToCategoryParams } from "interfaces/clientDashboard/moveToCategory.
 import { UploadFileToChatParams } from "interfaces/clientDashboard/UploadFileToChat.interface";
 import { ChangeCategoryNameParams } from "interfaces/clientDashboard/changeCategoryName.interface";
 import { ChangeChatNameParams } from "interfaces/clientDashboard/changeChatName.interface";
-import { getLocalItem } from "helper/localStorage.helper";
-import { Connection } from "interfaces/login/connection.interface";
-import isNil from "lodash.isnil";
+
 
 export const getChatbotThread = () =>
     useMutation({

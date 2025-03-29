@@ -95,7 +95,7 @@ const ClientMetrics: React.FC = () => {
               changeRate={0}
               tendencyUp={true}
               cardType={MetricCardType.descriptiveCard}
-              description={ `*Compared to $2883 non encore cost per hour`}
+              description={ `*Compared to average $2,883 non Encore cost/hour`}
             />
            <MetricCard
               isLoading={isLoading}

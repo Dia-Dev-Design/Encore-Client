@@ -72,10 +72,11 @@ const RegisterWizard: React.FC = () => {
     }, [user]);
 
     const saveStepData = async (endpoint: string, data: any, currentStep: number): Promise<boolean> => {
+        const storedToken: any = localStorage.getItem("authToken");
         try {
             const response = await fetch(endpoint, {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization":  "Bearer "+userData?.accessToken || "" },
+                headers: { "Content-Type": "application/json", "Authorization":  "Bearer "+storedToken || "" },
                 body: JSON.stringify(data),
             });
 

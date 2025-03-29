@@ -33,7 +33,7 @@ const MetricCard: React.FC<MetricCardProps> = ({isLoading, label, total, changeR
                     </p>
                     {tendencyUp !== undefined && 
                         <div className="flex flex-row items-center gap-2">
-                            {(changeRate > 0 || changeRate < 0) && (<img className="w-3.5" src={tendencyUp ? UpArrowIcon : DownArrowIcon}/>)}
+                            {(changeRate > 0 || changeRate < 0) && (<img alt='changerate' className="w-3.5" src={tendencyUp ? UpArrowIcon : DownArrowIcon}/>)}
                             <p className="mt-0.5 text-base font-figtree">
                              {description}
                             </p>
@@ -79,7 +79,7 @@ const MetricCard: React.FC<MetricCardProps> = ({isLoading, label, total, changeR
                     </p>
                     {tendencyUp !== undefined && 
                         <div className="flex flex-row items-center gap-2">
-                            {(changeRate > 0 || changeRate < 0) && (<img className="w-3.5" src={tendencyUp ? UpArrowIcon : DownArrowIcon}/>)}
+                            {(changeRate > 0 || changeRate < 0) && (<img alt='change-rate' className="w-3.5" src={tendencyUp ? UpArrowIcon : DownArrowIcon}/>)}
                             <p className="mt-0.5 text-md font-figtree">
                                 {Math.abs(changeRate)}%
                             </p>

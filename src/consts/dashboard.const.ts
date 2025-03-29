@@ -28,16 +28,10 @@ export const adminSidebarOptions: SidebarOption[] = [
         iconOff: ClientsIconOff,
     },
     {
-        path: appRoute.admin.users,
-        label: "Users",
-        iconOn: UsersIconOn,
-        iconOff: UsersIconOff,
-    },
-    {
-        path: appRoute.admin.aiChatBot,
-        label: "AI Chatbot",
-        iconOn: AiChatbotIconOn,
-        iconOff: AiChatbotIconOff,
+        path: appRoute.admin.docHub,
+        label: "Doc Hub",
+        iconOn: DocHubOn,
+        iconOff: DocHubOff,
     },
 ];
 

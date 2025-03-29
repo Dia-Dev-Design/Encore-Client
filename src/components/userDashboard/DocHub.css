@@ -1,0 +1,67 @@
+.pdf-thumbnail-page {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pdf-thumbnail {
+  transition: transform 0.2s;
+}
+
+.pdf-thumbnail:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+.pdf-viewer-page {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.react-pdf__Page__canvas {
+  margin: 0 auto;
+  display: block;
+  max-width: 100%;
+  height: auto !important;
+}
+
+
+.pdf-thumbnail .ant-card-cover {
+  overflow: hidden;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdf-container {
+  max-width: 100%;
+  margin: 0 auto;
+  background-color: #ffffff;
+  padding-bottom: 20px;
+  border-radius: 4px;
+}
+
+.pdf-nav-button {
+  padding: 0.5rem 1rem;
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.pdf-nav-button:hover {
+  background-color: #40a9ff;
+}
+
+.pdf-nav-button:disabled {
+  background-color: #d9d9d9;
+  cursor: not-allowed;
+}
+
+
+.pdf-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+} 

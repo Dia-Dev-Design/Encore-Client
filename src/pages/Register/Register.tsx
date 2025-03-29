@@ -1,5 +1,6 @@
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import { validateEmail, validatePassword } from "utils/userValidations";
+import axios from 'axios'
 import LogoImage from 'assets/images/BigLogo.png';
 import GoogleLogoImage from 'assets/icons/GoogleLogo.png';
 import ShowPasswordIcon from 'assets/icons/StatusOn.svg';
@@ -10,6 +11,7 @@ import { serverURL } from 'utils/constants';
 import { parseUser } from 'utils/functions';
 import { cleanlocalStorage, getLocalItem, setLocalItemWithExpiry } from 'helper/localStorage.helper';
 import { appRoute } from 'consts/routes.const';
+import { useAuth } from 'context/auth.context';
 
 const Register: React.FC = () => {
     const navigate = useNavigate();
@@ -19,6 +21,8 @@ const Register: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [emailErrorMessage, setEmailErrorMessage] = useState("");
     const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
+
+    const { setUser } = useAuth()
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -50,36 +54,61 @@ const Register: React.FC = () => {
     };
 
     const handleRegistration = async () => {
+        console.log("this is our request destination*******>", `${process.env.REACT_APP_API_BASE_URL}api/auth/signup`)
         try {
-            const response = await fetch(process.env.REACT_APP_API_BASE_URL+'api/auth/signup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email,
-                    password,
-                }),
-            });
+            const response = await axios.post(process.env.REACT_APP_API_BASE_URL+'api/auth/signup', {email, password})
+            // const apiUrl = process.env.REACT_APP_API_BASE_URL + 'api/auth/signup';
+            // console.log('Submitting registration to:', apiUrl);
+            // 
+            // const response = await fetch(process.env.REACT_APP_API_BASE_URL+'api/auth/signup', {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //     },
+            //     body: JSON.stringify({
+            //         email,
+            //         password,
+            //     }),
+            // });
+            //
+            // console.log('Response Status:', response.status);
 
-            if (response.ok) {
-                const data = await response.json();
+            // 
 
-                setLocalItemWithExpiry("user", JSON.stringify(parseUser(data)), 2);
+            // if (response) {
+                const data = await response.data;
+                setUser(response.data)
+
+                console.log("++++++++> this is our axios repsonse", response)
+                setLocalItemWithExpiry("user", JSON.stringify(data.user), 2);
+                console.log("this is parsedUser----->", JSON.stringify(data.user))
                 navigate(appRoute.clients.registerProcess);
-            } else {
-                const errorData = await response.json();
-                const errorMessage = errorData.message || 'Registration failed. Please try again.';
-                switch (errorMessage) {
-                    case "User already exists":
-                        setEmailErrorMessage("User already exists");
-                        break;
-                    default:
-                        break;
-                }
+            // } 
+            
+            // else if (response.data.error) {
+  
+            //     console.log("This is else data xxxxxx>", response )
+            //     // const errorData = response;
+            //     // const errorMessage = errorData.message || 'Registration failed. Please try again.';
+            //     // switch (errorMessage) {
+            //     //     case "User already exists":
+            //     //         setEmailErrorMessage("User already exists");
+            //     //         break;
+            //     //     default:
+            //     //         break;
+            //     // }
+            // }
+        } catch (error: any) {
+            console.error('Error during registraton:', error);
+
+            const errorMessage = error.response.data.message || 'Registration failed. Please try again.';
+            switch (errorMessage) {
+                case "User already exists":
+                    setEmailErrorMessage("User already exists");
+                    break;
+                default:
+                    break;
             }
-        } catch (error) {
-            console.error('Error during register:', error);
         }
     };
 
@@ -161,10 +190,10 @@ const Register: React.FC = () => {
                     <S.Button onClick = {() => handleSubmit()}>Create Account</S.Button>
                 </S.Form>
                 <S.Separator>&nbsp; Or sign up with &nbsp;</S.Separator>
-                <S.GoogleButton onClick={handleRegisterWithGoogle}>
+                {/* <S.GoogleButton onClick={handleRegisterWithGoogle}>
                     <S.GoogleIcon src={GoogleLogoImage} alt="Google" />
                     Google
-                </S.GoogleButton>
+                </S.GoogleButton> */}
                 <S.RegisterContainer>
                     <S.Label>Already have an account?</S.Label>
                     <S.LabelButton onClick={handleRedirectToLogin}>Log In</S.LabelButton>

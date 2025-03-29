@@ -36,19 +36,47 @@ const ChatWindow: React.FC<ChatWindowProps> =({
     const { mutate: fetchChatbotThread, isPending: isFetchingThread } = getChatbotThread();
     const { mutate: sendAnswer, isPending: isSendingQuestion } = answerQuestion();
     const [questionSentence, setQuestionSentence] = useState<string>("");
-    const { data, error } = adminSSE(userData?.id, chatbotThread?.id, true);
+    
+    // Correctly set isLawyer based on user data
+    const isLawyer = userData?.isLawyer === true;
+    
+    // Update SSE connection with correct user role
+    const { data, error } = adminSSE(userData?.id, chatbotThread?.id, isLawyer);
+
+    useEffect(() => {
+        if (userData) {
+            console.log("User data:", userData);
+            console.log("User type:", userData?.userType);
+            console.log("Is lawyer:", isLawyer);
+            
+            // Log the token from localStorage for debugging
+            try {
+                const connectionStr = localStorage.getItem("connection");
+                if (connectionStr) {
+                    const connection = JSON.parse(connectionStr);
+                    console.log("Token available:", !!connection.token);
+                    // Don't log the full token for security reasons
+                }
+            } catch (error) {
+                console.error("Error reading localStorage:", error);
+            }
+        }
+    }, [userData]);
 
     useEffect(() => {
         if (!data) { return; }
 
-        const dataReceived = JSON.parse(data);
-        if (dataReceived.message.user.typeUser === "USER_COMPANY"){
+        try {
+            const dataReceived = JSON.parse(data);
+            // Process messages from both clients and lawyers
             const newAnswer: HistoryNode = {
                 checkpoint_id: dataReceived.message.id,
                 content: dataReceived.message.content,
-                role: "user",
+                role: dataReceived.message.user.typeUser === "USER_COMPANY" ? "user" : "lawyer",
             };
             setHistoryConversation([...historyConversation, newAnswer]);
+        } catch (error) {
+            console.error("Error parsing SSE data:", error);
         }
     }, [data]);
 
@@ -57,6 +85,13 @@ const ChatWindow: React.FC<ChatWindowProps> =({
         console.error("SW", error);
     }, [error]);
 
+    useEffect(() => {
+        if (chatbotThread?.id) {
+            // This forces a refresh of the relevant data when the thread changes
+            invalidateMainQueries();
+        }
+    }, [chatbotThread?.id]);
+
     const handleSend = (question: string) => {
         setQuestionSentence("");
         setSelectedChatType(ChatSpaceType.chatSpace);
@@ -64,36 +99,62 @@ const ChatWindow: React.FC<ChatWindowProps> =({
     }
 
     const handleAnswer = (answer: string, fetchedThread?: string) => {
+        // Log user info for debugging
+        console.log("Current user:", userData);
+        console.log("Is lawyer:", isLawyer);
+        
         const sendAnswerProcess = (chatbotThreadId: string) => {
             if (!chatbotThreadId) {
                 alert("Error sending answer");
                 return;
             }
+            
+            // Determine if we're sending as a lawyer or regular user
+            const userType = isLawyer ? "lawyer" : (userData?.userType === 'Admin' ? "admin" : "user");
+            
             const payload = {
                 threadId: chatbotThreadId,
-                message: answer
+                message: answer,
+                userType: userType
             };
+            
+            console.log(`Sending answer with payload as ${userType}:`, payload);
             
             sendAnswer(payload, { 
                 onSuccess: (data) => {
-                    //handleServerEvents();
-                    //invalidateMainQueries();
+                    console.log("Message sent successfully:", data);
                 },
                 onError: (error, payload) => {
                     console.error("Error:", error);
+                    // More specific type checking for Axios-like errors
+                    if (error && 
+                        typeof error === 'object' && 
+                        'response' in error && 
+                        error.response && 
+                        typeof error.response === 'object' && 
+                        'data' in error.response) {
+                        console.error("Error response data:", error.response.data);
+                    }
+                    
+                    // Even if the server request failed, we still want to show the message in the UI
+                    // Add the message to the conversation history anyway
+                    const newLawyerMessage: HistoryNode = {
+                        checkpoint_id: `error-${Date.now()}`,
+                        content: answer,
+                        role: "lawyer",
+                    };
+                    setHistoryConversation([...historyConversation, newLawyerMessage]);
                 },
             });
         }
 
         if (fetchedThread) {
-            addNewUserMessage(answer);
             sendAnswerProcess(fetchedThread);
         } else {
             if (!chatbotThread?.id ) {
                 fetchChatbotThread(undefined, {
                     onSuccess: (data) => {
                         setChatbotThread(data);
-                        addNewUserMessage(answer);
                         sendAnswerProcess(data.id);
                     },
                     onError: (error) => {
@@ -101,22 +162,10 @@ const ChatWindow: React.FC<ChatWindowProps> =({
                     },
                 });
             } else {
-                addNewUserMessage(answer);
                 sendAnswerProcess(chatbotThread.id);
             }
         }
     };
-
-    const addNewUserMessage = (question: string) => {
-        const newHistoryConversation: HistoryNode[] = historyConversation;
-        const newQuestion: HistoryNode = {
-            checkpoint_id: `${Date.now()}`,
-            content: question,
-            role: "lawyer",
-        };
-        newHistoryConversation.push(newQuestion);
-        setHistoryConversation(newHistoryConversation);
-    }
 
     const getHeaderTitle = () => {
         return chatbotThread?.title ? chatbotThread.title : ""

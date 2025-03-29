@@ -18,7 +18,6 @@ import { Connection } from "interfaces/login/connection.interface";
 import { UserType } from "interfaces/login/userType.enum";
 import { useAuth } from "../../context/auth.context";
 import { useParams } from "react-router-dom";
-import { useQueryParams } from "helper/query.helper";
 
 const getApiUrl = (path: string) => {
   const base = process.env.REACT_APP_API_BASE_URL || "";
@@ -68,7 +67,7 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
     setGeneralErrorMessage("");
 
     try {
-      const response = await fetch(getApiUrl("auth/login"), {
+      const response = await fetch(getApiUrl("auth/admin/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,21 +79,22 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
       });
 
       const data = await response.json();
+      console.log("this is data....", data);
 
-      if (data.accessToken && !data.isAdmin) {
-        localStorage.setItem("isAdmin", "false");
+      if (data) {
+        localStorage.setItem("isAdmin", "true");
       }
 
       if (response.ok) {
         const token = data.accessToken;
+        console.log("This is data on succesful response++++++++>", data);
         storeToken(token);
+        localStorage.setItem("isAdmin", "true");
 
         setTimeout(() => {
           authenticateUser();
-          window.location.href = "/home";
+          window.location.href = "/dashboard";
         }, 500);
-
-        navigate(appRoute.clients.dashboard);
       }
       if (data.error) {
         handleLoginError(data.error);

@@ -35,7 +35,7 @@ const MetricCard: React.FC<MetricCardProps> = ({isLoading, label, total, changeR
                         <div className="flex flex-row items-center gap-2">
                             {(changeRate > 0 || changeRate < 0) && (<img className="w-3.5" src={tendencyUp ? UpArrowIcon : DownArrowIcon}/>)}
                             <p className="mt-0.5 text-base font-figtree">
-                                {Math.abs(changeRate)}% {description}
+                             {description}
                             </p>
                         </div>
                     }

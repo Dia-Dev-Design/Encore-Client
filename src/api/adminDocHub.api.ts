@@ -21,3 +21,37 @@ export function getCompanyData(key: string, companyID: string) {
                 .then(unwrapAxiosResponse),
     });
 }
+
+
+export function getAdminUsers(key: string, lawyerID: string, options?: { enabled?: boolean }) {
+    return useQuery({
+        queryKey: [key],
+        queryFn: async ({ signal }) => 
+            apiClient
+                .get(`/api/dochub/assigned-users/${lawyerID}`, {signal,})
+                .then(unwrapAxiosResponse),
+        enabled: options?.enabled !== undefined ? options.enabled : true,
+    });
+}
+
+export function getUserDocumentsWithUrlsByUserId(
+    key: string,
+    userId: string,
+    params: { limit: number; page: number },
+    options?: { enabled?: boolean }
+) {
+    return useQuery({
+        queryKey: [key, userId, params.page, params.limit],
+        queryFn: async ({ signal }) => {
+            const response = await apiClient.get(`/api/dochub/documents/user/${userId}/with-urls`, {
+                signal,
+                params: {
+                    limit: params.limit,
+                    page: params.page,
+                },
+            });
+            return unwrapAxiosResponse(response);
+        },
+        enabled: options?.enabled !== undefined ? options.enabled : true,
+    });
+}

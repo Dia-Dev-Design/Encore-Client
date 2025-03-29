@@ -38,11 +38,40 @@ const AiChatbot: React.FC = () => {
     const { data: threadsInCategory, isLoading: threadsInCategoryLoading } = getChatsFromCategory(CATEGORY_CHATS, selectedCategoryId);
 
     useEffect(() => {
-        if (chatHistoryData && chatHistoryData.response.messages.length > 0) {
-            setSelectedChatType(ChatSpaceType.chatSpace);
-            setChatbotThreadType(chatHistoryData.response.chatType as ChatTypeEnum);
-            setHistoryConversation(chatHistoryData.response.messages);
-            setFilesConversation(chatHistoryData.response.files);
+        if (chatHistoryData && chatHistoryData.response) {
+            // Check if we have valid messages
+            if (chatHistoryData.response.messages && Array.isArray(chatHistoryData.response.messages)) {
+                // Ensure all messages have valid content and checkpoint_id
+                const cleanedMessages = chatHistoryData.response.messages.map((msg: HistoryNode, index: number) => {
+                    // Create proper history node structure matching what the components expect
+                    const historyNode: HistoryNode = {
+                        // Map the id to checkpoint_id if it exists
+                        checkpoint_id: msg.checkpoint_id || `history-${index}-${Date.now()}`,
+                        content: msg.content || "",
+                        role: msg.role,
+                        // Add any other required properties with sensible defaults
+                        fileId: msg.fileId || undefined,
+                        url: msg.url || undefined,
+                        isStreaming: false,
+                        isError: false,
+                    };
+                    
+                    return historyNode;
+                });
+                                
+                setSelectedChatType(ChatSpaceType.chatSpace);
+                setChatbotThreadType(chatHistoryData.response.chatType as ChatTypeEnum);
+                setHistoryConversation(cleanedMessages);
+                
+                // Handle files if they exist
+                if (chatHistoryData.response.files && Array.isArray(chatHistoryData.response.files)) {
+                    setFilesConversation(chatHistoryData.response.files);
+                }
+            } else {
+                console.warn("Chat history loaded but no valid messages found", chatHistoryData);
+                // Initialize with empty array to prevent undefined errors
+                setHistoryConversation([]);
+            }
         }
     }, [chatHistoryData]);
 

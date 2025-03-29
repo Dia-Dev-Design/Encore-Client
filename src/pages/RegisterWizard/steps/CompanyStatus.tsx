@@ -18,7 +18,7 @@ const CompanyStatus: React.FC<CompanyStatusProps> = ({ companyStatusData, setCom
         {"id":"UNDECIDED", "label":"Haven’t decided yet"}, 
         {"id":"OTHER", "label":"Other"}, 
     ];
-    const [selectedCurrentStageOption, setSelectedCurrentStageOption] = useState<string>("");
+    const [selectedCurrentStageOption, setSelectedCurrentStageOption] = useState<string>("OTHER");
     const [otherCurrentStageOption, setOtherCurrentStageOption] = useState<string>("");
     const [otherCurrentStageErrorMessage, setOtherCurrentStageErrorMessage] = useState<string>("");
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Tooltip } from "antd";
 import SendIcon from "assets/icons/chat/SendIcon.svg";
 import SendDisableIcon from "assets/icons/chat/SendDisabledIcon.svg";
@@ -14,14 +14,23 @@ interface QuestionFieldProps {
     questionSentence: string;
     setQuestionSentence: (sentence: string) => void;
     chatbotThreadType: ChatTypeEnum | undefined;
+    chatbotThreadId: string | undefined;
 }
 
 const QuestionField: React.FC<QuestionFieldProps> =({
     placeholder, handleSend, handleLawyerSend, isLoading,
-    questionSentence, setQuestionSentence, chatbotThreadType
+    questionSentence, setQuestionSentence, chatbotThreadType, chatbotThreadId
 }) => {
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [isAskLawyer, setIsAskLawyer] = useState<boolean>(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    // Focus input when loading state changes from true to false
+    useEffect(() => {
+        if (!isLoading && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [isLoading, chatbotThreadId, chatbotThreadType]);
 
     const handleKeyDown = (e: any) => {
         if ((e.code === "Enter" || e.code === "NumpadEnter") && questionSentence !== "") {
@@ -31,14 +40,27 @@ const QuestionField: React.FC<QuestionFieldProps> =({
     }
 
     const handleSendButton = () => {
+        const isInputFocused = document.activeElement === inputRef.current;
+
         if (isAskLawyer) {
             setIsAskLawyer(false);
             handleLawyerSend(questionSentence);
+            console.log("questionSentence", questionSentence);
         } else {
             handleSend(questionSentence, uploadedFile ? uploadedFile as File : undefined);
         }
         setQuestionSentence("");
         setUploadedFile(null);
+
+        // Only try to focus if input was focused before
+        if (isInputFocused) {
+            // Use a longer timeout to ensure all state updates are processed
+            setTimeout(() => {
+                if (inputRef.current) {
+                    inputRef.current.focus();
+                }
+            }, 100);
+        }
     }
 
     const handleAskForLawyer = () => {
@@ -62,6 +84,7 @@ const QuestionField: React.FC<QuestionFieldProps> =({
                 </Tooltip>
                 <AttachFileButton uploadedFile={uploadedFile} setUploadedFile={setUploadedFile} />
                 <input
+                    ref={inputRef}
                     type="text"
                     placeholder={placeholder}
                     className="w-full px-2 py-1 bg-transparent border-none focus:outline-none"
@@ -69,6 +92,7 @@ const QuestionField: React.FC<QuestionFieldProps> =({
                     onChange={e => setQuestionSentence(e.target.value)}
                     disabled={isLoading}
                     onKeyDown={(e) => handleKeyDown(e)}
+                    autoFocus={true}
                 />
                 <button 
                     onClick={() => handleSendButton()} 

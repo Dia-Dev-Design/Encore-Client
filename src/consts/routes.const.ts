@@ -18,7 +18,8 @@ export const appRoute = {
     company: BASE_URLS.dashboard + BASE_URLS.clients + BASE_URLS.company,
     users: BASE_URLS.dashboard + "/users",
     aiChatBot: BASE_URLS.dashboard + "/ai-chatbot",
-    dissolution: BASE_URLS.dashboard + BASE_URLS.clients + BASE_URLS.dissolution 
+    dissolution: BASE_URLS.dashboard + BASE_URLS.clients + BASE_URLS.dissolution ,
+    docHub: BASE_URLS.dashboard + "/doc-hub/admin",
   },
 
   clients: {

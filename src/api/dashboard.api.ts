@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, UseQueryResult } from "@tanstack/react-query";
 
 import { apiClient, unwrapAxiosResponse } from "./client.config";
 
@@ -7,6 +7,7 @@ import { MetricParams } from "interfaces/dashboard/metrics/metricParams.interfac
 import { Metric } from "interfaces/dashboard/metrics/metric.interface";
 import { ClientDataReceived } from "interfaces/dashboard/clientDataReceived.interface";
 import { AdminNotificationParams } from "interfaces/dashboard/adminNotifications.interface";
+
 
 export function getClients(key: string, params: Params) {
   return useQuery({
@@ -53,15 +54,18 @@ export function getUser() {
   return useQuery<ClientDataReceived>({
     queryKey: ['user'],
     queryFn: async ({ signal }) => {
+      console.log("This is our response from getUser()", signal)
       const response = await apiClient.get('/api/auth/me', { signal });
       return unwrapAxiosResponse(response);
     }
   });
 }
 
-export function getAdminUser() {
-  return useQuery({
-    queryKey: ['user'],
+
+
+export function getAdminUser(): UseQueryResult<any, unknown> {
+  return useQuery<any, unknown>({
+    queryKey: ['admin-user'],
     queryFn: async ({ signal }) => {
       const response = await apiClient.get('/api/auth/admin/me', { signal });
       return unwrapAxiosResponse(response);
@@ -97,3 +101,16 @@ export const hideAdminNotifications = () =>
           .post(`/api/notifications/read-admin/${notificationId}`)
           .then(unwrapAxiosResponse),
   });
+
+export function getCostMetrics() {
+  return useQuery({
+    queryKey: ["costMetrics"],
+    queryFn: ({ signal }) =>
+      apiClient
+        .get(`/api/metrics/cost/formula`, {
+          signal
+        })
+        .then(unwrapAxiosResponse),
+    refetchOnWindowFocus: false
+  });
+}

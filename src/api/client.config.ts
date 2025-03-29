@@ -1,19 +1,19 @@
 import axios, { type AxiosResponse } from "axios";
-import { getLocalItem } from "helper/localStorage.helper";
-import { Connection } from "interfaces/login/connection.interface";
 import isNil from "lodash.isnil";
 
 export const apiClient = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL,
 });
 
-export const unwrapAxiosResponse = <T>(resp: AxiosResponse<T>) => resp.data;
+export const unwrapAxiosResponse = <T>(response: AxiosResponse<T>) => response.data;
 
 apiClient.interceptors.response.use(undefined, async (err) => {
-  const connection: Connection = JSON.parse(getLocalItem("connection"));
-  const token = connection.token;
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    return Promise.reject(err);
+  }
+  
   if (err.response?.status === 401) {
-    // TODO: remove session
   }
   if (!isNil(token)) {
     if (err.response?.status !== 401) {
@@ -23,8 +23,10 @@ apiClient.interceptors.response.use(undefined, async (err) => {
 });
 
 apiClient.interceptors.request.use((config) => {
-  const connection: Connection = JSON.parse(getLocalItem("connection"));
-  const token = connection.token;
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    return config;
+  }
 
   if (!isNil(token)) {
     config.headers.Authorization = `Bearer ${token}`;

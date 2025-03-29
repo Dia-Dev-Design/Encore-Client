@@ -312,7 +312,7 @@ export const MultipleDropdownList = styled.ul`
     background-color: #fff;
     border: 1px solid #ccc;
     border-radius: 4px;
-    max-height: 400px;
+    max-height: 355px;
     overflow-y: auto;
     z-index: 1000;
     list-style: none;

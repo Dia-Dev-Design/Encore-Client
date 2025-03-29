@@ -26,6 +26,9 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 }) => {
   const [isProfileMenuCollapsed, setIsProfileMenuCollapsed] = useState(false);
   const [isBugModalOpen, setIsBugModalOpen] = useState(false);
+  const [bugSubject, setBugSubject] = useState("");
+  const [bugMessage, setBugMessage] = useState("");
+  const [bugSubmitted, setBugSubmitted] = useState(false);
   const { logOutUser } = useAuth();
 
   const handleLogout = () => {
@@ -41,6 +44,16 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
     ) {
       hideNotifications();
     }
+  };
+
+  const handleBugSubmit = () => {
+    setBugSubmitted(true);
+    setTimeout(() => {
+      setBugSubmitted(false);
+      setIsBugModalOpen(false);
+      setBugSubject('')
+      setBugMessage('')
+    }, 4000);
   };
 
   return (
@@ -126,9 +139,9 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
             </p>
           </div>
           <div className="border border-greys-300 py-2 px-4 h-3/4">
-            <button className="w-full py-2 px-4 text-left text-primaryLinkWater-950 bg-primaryLinkWater-50">
+            {/* <button className="w-full py-2 px-4 text-left text-primaryLinkWater-950 bg-primaryLinkWater-50">
               Change profile picture
-            </button>
+            </button> */}
             <button
               className="w-full py-2 px-4 text-left text-primaryLinkWater-950"
               onClick={() => setIsBugModalOpen(true)}
@@ -151,7 +164,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
         </div>
       )}
       {isBugModalOpen && (
-        <div className="absolute top-20 right-20 w-1/4 bg-neutrals-white border border-greys-300 z-40 h-4/5 flex flex-col">
+        <div className="absolute top-20 right-20 w-1/4 bg-gray-100 border border-greys-300 z-40 h-4/4 flex flex-col">
           <div className="border border-greys-300 py-2 px-4 h-1/4 flex flex-col items-center justify-center gap-1">
             <p className="font-figtree text-2xl text-primaryMariner-900 font-medium">
               {user && user.name
@@ -162,28 +175,65 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
             </p>
             <br />
             <hr />
-            <p className="font-figtree text-sm text-primaryMariner-900 font-medium">
-              Please help us with a description of your bug.
-            </p>
+            {!bugSubmitted && (
+              <p className="font-figtree text-sm text-primaryMariner-900 font-medium">
+                Please help us with a description of your bug.
+              </p>
+            )}
           </div>
-          <div className="border border-greys-300 py-2 px-4 h-3/4">
-            <button className="w-full py-2 px-4 text-left text-primaryLinkWater-950 bg-primaryLinkWater-50">
-              Subject
-            </button>
-            <button
-              className="w-full py-2 px-4 text-left text-primaryLinkWater-950"
-              // onClick={() => setIsBugModalOpen(true)}
-            >
-              Description
-            </button>
-            <button
-              className="w-full py-2 px-4 text-left text-primaryLinkWater-950"
-              onClick={handleLogout}
-            >
-              Submit
-            </button>
+          <div className="border border-greys-300 py-2 px-4 h-3/4 flex flex-col items-center justify-center w-[100%]">
+            <>
+              {bugSubmitted ? (
+                <div className="bg-white shadow-md rounded text-center px-8 pt-6 pb-8 mb-4 h-3/4 w-[100%] max-w-md mx-auto mt-3">
+                  <h2>Thank you for reporting the bug</h2>
+                  <p>Our team will be addressing this soon!</p>
+                </div>
+              ) : (
+                <form
+                  onSubmit={() => handleBugSubmit()}
+                  className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-[100%] max-w-md mx-auto mt-3"
+                >
+                  <div>
+                    <label htmlFor="subject">Subject</label>
+                    <br />
+
+                    <input
+                      value={bugSubject}
+                      onChange={(e) => setBugSubject(e.target.value)}
+                      type="text"
+                      id="subject"
+                      name="subject"
+                      required
+                      className="mt-1 p-2 block w-full rounded-md border outline-none border-gray-300 focus:primaryMariner-900 focus:ring-1 focus:ring-primaryMariner-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="message">Message:</label>
+                    <br />
+
+                    <textarea
+                      id="message"
+                      name="message"
+                      value={bugMessage}
+                      onChange={(e) => setBugMessage(e.target.value)}
+                      rows={12}
+                      required
+                      className="mt-1 p-2 block w-full rounded-md border outline-none border-gray-300 focus:primaryMariner-900 focus:ring-1 focus:ring-primaryMariner-900"
+                    ></textarea>
+                  </div>
+                  <button
+                    className="w-full py-3 px-4 text-white font-semibold bg-primaryViking-800 rounded-md focus:outline-none focus:bg-indigo-600 hover:bg-primaryMariner-900"
+                    type="submit"
+                  >
+                    Submit
+                  </button>
+                </form>
+              )}
+            </>
           </div>
           <button
+            type="button"
             className="absolute right-4 top-4"
             onClick={() => setIsBugModalOpen(false)}
           >

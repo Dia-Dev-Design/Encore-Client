@@ -68,7 +68,7 @@ const ProspectCard: React.FC<MetricCardProps> = ({isLoading, prospects, clients,
                     </ResponsiveContainer>
                 </div>
                 <div className="text-sm">
-                    <p className="flex flex-row text-md font-figtree gap-2">Prospect <img className="w-3.5" src={RightArrowIcon}/> Clients</p>
+                    <p className="flex flex-row text-md font-figtree gap-2">Prospect <img alt='prospect' className="w-3.5" src={RightArrowIcon}/> Clients</p>
                     <p className="text-7xl font-semibold mt-2 font-figtree text-center">{prospects_to_clients}</p>
                 </div>
             </div>

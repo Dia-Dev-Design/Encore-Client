@@ -3,17 +3,13 @@ import { isValidPhoneNumber } from "libphonenumber-js";
 import * as S from "./styles";
 import arrow from "assets/icons/Arrow.png";
 import { countries, states } from "utils/constants";
-import {
-  BasicInfoData,
-  CountryData,
-  User,
-  Industry
-} from "utils/interfaces";
+import { BasicInfoData, CountryData, User, Industry } from "utils/interfaces";
 import { industryOptions } from "utils/constants";
 import { getLocalItem } from "helper/localStorage.helper";
 import axios from "axios";
 
 import { useAuth } from "context/auth.context";
+import { RegularUser } from "context/auth.context";
 
 interface BasicInfoProps {
   basicInfoData: BasicInfoData;
@@ -22,20 +18,20 @@ interface BasicInfoProps {
 }
 
 interface UserData {
-  accessToken: string,
-  isAdmin: boolean,
-  user: {    
-    createdAt: string
-    email: string
-    id: string
-    isAdmin: boolean
-    isVerified: boolean
-    lastPasswordChange: string | null
-    name: string
-    password: string
-    phoneNumber: string
-    updatedAt: string
-  }
+  accessToken: string;
+  isAdmin: boolean;
+  user: {
+    createdAt: string;
+    email: string;
+    id: string;
+    isAdmin: boolean;
+    isVerified: boolean;
+    lastPasswordChange: string | null;
+    name: string;
+    password: string;
+    phoneNumber: string;
+    updatedAt: string;
+  };
 }
 
 const BasicInfo: React.FC<BasicInfoProps> = ({
@@ -50,7 +46,7 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
   const [industries, setIndustries] = useState<Industry[]>([]);
   const [accessToken, setAccessToken] = useState<string | undefined>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
-  const [selectedIndustry, setSelectedIndustry] = useState<Industry | ''>('');
+  const [selectedIndustry, setSelectedIndustry] = useState<Industry | "">("");
   const [fullNameErrorMessage, setFullNameErrorMessage] = useState<string>("");
   const [countryCodeErrorMessage, setCountryCodeErrorMessage] =
     useState<string>("");
@@ -86,13 +82,13 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
   const toggleCompanyCountriesDropdown = () =>
     setIsCompanyCountriesOpen(!isCompanyCountriesOpen);
 
-  const { user } = useAuth()
+  const { user } = useAuth();
 
   const getStep1Data = async (
     accessToken: string,
     companyId: string
   ): Promise<boolean> => {
-    console.log("This is step one data=====>", accessToken, companyId)
+    console.log("This is step one data=====>", accessToken, companyId);
     try {
       const response = await fetch(
         process.env.REACT_APP_API_BASE_URL + "api/register/step1/" + companyId,
@@ -118,7 +114,7 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
       // const industry = industries.find(
       //   (industry) => industry.id === dataReceived.industryId
       // );
-      setSelectedIndustry('');
+      setSelectedIndustry("");
       setSelectedCompanyStatesOptions(basicInfoData.states);
       if (basicInfoData.otherCountries) {
         setSelectedCompanyCountriesOptions(basicInfoData.otherCountries);
@@ -275,9 +271,8 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
         //   basicInfoData
         // );
         setUserData(user);
-        console.log("This is data temp")
+        console.log("This is data temp");
         setAccessToken(user.accessToken);
-
 
         if (accessToken) {
           // const response = await getIndustriesData(
@@ -285,21 +280,24 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
           // );
           // console.log("This is our response in industries useEffect", response.data);
           // if (response.data) {
-            // const tempCompany = JSON.parse(jsonCompany)
-            getStep1Data(accessToken, basicInfoData.companyName);
-            // setTimeout(() => {
-              
-            // }, 800)
-          }
+          // const tempCompany = JSON.parse(jsonCompany)
+          const userAsRegular = user as any; // Type assertion to avoid the TypeScript error
+          const companyId =
+            userAsRegular.companies?.[0]?.id || basicInfoData.companyName;
+          getStep1Data(accessToken, companyId);
+          // setTimeout(() => {
+
+          // }, 800)
         }
-    }
-    
+      }
+    };
+
     getUserData();
   }, [user, accessToken, userData]);
 
-  useEffect(() =>{
-    setIndustries(industryOptions)
-  }, [])
+  useEffect(() => {
+    setIndustries(industryOptions);
+  }, []);
 
   useEffect(() => {
     document.addEventListener("click", handleClickOutside);

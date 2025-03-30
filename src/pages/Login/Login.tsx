@@ -81,6 +81,8 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
 
       const data = await response.json();
 
+      console.log("This is the returned data from login", data)
+
       if (data.accessToken && !data.isAdmin) {
         localStorage.setItem("isAdmin", "false");
       }

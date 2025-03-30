@@ -156,7 +156,11 @@ function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-
+  useEffect(() => {
+    if(user){
+      console.log("this is our user", user)
+    }
+  }, [user])
   return (
     <AuthContext.Provider
       value={{

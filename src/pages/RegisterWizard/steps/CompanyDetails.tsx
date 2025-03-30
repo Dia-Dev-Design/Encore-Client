@@ -54,7 +54,10 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({companyDetailsData, setC
         } else {
             console.log("Error getting user");
         }
+        setCompanyDetailsData({ ...companyDetailsData, hasRaisedCapital: selectedRaiseOption !== 'No'});
+        setCompanyDetailsData({ ...companyDetailsData, hasW2Employees: selectedEmployeeOption !== 'No'});
     }, []);
+
 
     useEffect(() => {
         document.addEventListener('click', handleClickOutside);

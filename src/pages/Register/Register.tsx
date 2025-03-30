@@ -180,7 +180,7 @@ const Register: React.FC = () => {
           </S.FormGroup>
           <S.Button onClick={() => handleSubmit()}>Create Account</S.Button>
         </S.Form>
-        <S.Separator>&nbsp; Or sign up with &nbsp;</S.Separator>
+        {/* <S.Separator>&nbsp; Or sign up with &nbsp;</S.Separator> */}
         {/* <S.GoogleButton onClick={handleRegisterWithGoogle}>
                     <S.GoogleIcon src={GoogleLogoImage} alt="Google" />
                     Google

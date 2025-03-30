@@ -15,6 +15,7 @@ export const get = <T = any>(route: string): Promise<AxiosResponse<T>> => {
 };
 
 export const post = <T = any, D = any>(route: string, body: D): Promise<AxiosResponse<T>> => {
+  console.log("This is the post route's route", )
   const token = localStorage.getItem("authToken");
 
   return axios.post<T>(SERVER_URL + route, body, {

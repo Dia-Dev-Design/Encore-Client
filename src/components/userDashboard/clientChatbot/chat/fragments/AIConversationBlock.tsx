@@ -22,6 +22,12 @@ const AIConversationBlock: React.FC<AIConversationBlockProps> =({blockId, messag
     useEffect(() => {
         if (!message) return;
         
+        // If there's an error, show the full error message immediately
+        if (isError) {
+            setVisibleContent(message);
+            return;
+        }
+
         // Store the full message
         fullContentRef.current = message;
         
@@ -33,11 +39,11 @@ const AIConversationBlock: React.FC<AIConversationBlockProps> =({blockId, messag
             // For non-streaming (existing messages), show the full content immediately
             setVisibleContent(message);
         }
-    }, [message, isStreaming]);
+    }, [message, isStreaming, isError]);
 
     // Handle streaming effect
     useEffect(() => {
-        if (!isStreaming || !message) return;
+        if (!isStreaming || !message || isError) return;
         
         // If we're streaming and message is different from what's visible,
         // gradually reveal the content character by character
@@ -57,7 +63,7 @@ const AIConversationBlock: React.FC<AIConversationBlockProps> =({blockId, messag
                 return () => clearTimeout(timer);
             }
         }
-    }, [message, visibleContent, isStreaming]);
+    }, [message, visibleContent, isStreaming, isError]);
 
     
     // Actively animate the cursor during streaming
@@ -93,7 +99,7 @@ const AIConversationBlock: React.FC<AIConversationBlockProps> =({blockId, messag
                     ) : (
                         <div>
                             {displayContent ? <Markdown>{displayContent}</Markdown> : ""}
-                            {isStreaming && (
+                            {isStreaming && !isError && (
                                 <span className="typing-cursor"></span>
                             )}
                         </div>

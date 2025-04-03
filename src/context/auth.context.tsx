@@ -18,6 +18,8 @@ interface BaseUser {
     email: string;
     id: string;
     isVerified: boolean;
+    isActivated: boolean;
+    registered :boolean;
     lastPasswordChange: string | null;
     name: string;
     password: string;
@@ -157,10 +159,10 @@ function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   useEffect(() => {
-    if(user){
-      console.log("this is our user", user)
+    if (user) {
+      console.log("this is our user", user);
     }
-  }, [user])
+  }, [user]);
   return (
     <AuthContext.Provider
       value={{

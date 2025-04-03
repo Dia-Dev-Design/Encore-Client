@@ -2,11 +2,12 @@ import {
   DISSOLUTION_CLIENTS,
   LAWYER_CHATBOT_CLIENTS,
   PROSPECT_CLIENTS,
+  CLIENT_ACTIVATION,
 } from "./query.const";
 
 export const ClientsTabsMap: Record<string, string> = {
-  [PROSPECT_CLIENTS]: "Prospect Clients",
-  [DISSOLUTION_CLIENTS]: "Dissolution Clients",
+  [CLIENT_ACTIVATION]: "Client Activation",
+  [PROSPECT_CLIENTS]: "Prospective Clients",
   [LAWYER_CHATBOT_CLIENTS]: "Chatbot Clients",
 };
 

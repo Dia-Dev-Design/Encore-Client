@@ -22,6 +22,20 @@ export function getClients(key: string, params: Params) {
   });
 }
 
+export function getNonActivatedUsers(key: string, params: Params) {
+  const { limit = 10, page = 1 } = params;
+  
+  return useQuery({
+    queryKey: [key, { limit, page }],
+    queryFn: ({ signal }) =>
+      apiClient
+        .get(`/api/user/admin/non-activated?limit=${limit}&page=${page}`, {
+          signal,
+        })
+        .then(unwrapAxiosResponse),
+  });
+}
+
 export function getActionableTasks(key: string, params: Params) {
   return useQuery({
     queryKey: [key, params],

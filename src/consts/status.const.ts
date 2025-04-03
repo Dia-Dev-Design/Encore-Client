@@ -10,3 +10,8 @@ export const LawyerChatbotClientsStatusMap: Record<string, string> = {
   [StatusChipType.none]: "N/A",
   [StatusChipType.done]: "Done",
 };
+
+export const NonActivatedUsersStatusMap: Record<string, string> = {
+  "true": "Activated",
+  "false": "Not Activated",
+};

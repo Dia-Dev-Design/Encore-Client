@@ -8,7 +8,6 @@ import { Metric } from "interfaces/dashboard/metrics/metric.interface";
 import { ClientDataReceived } from "interfaces/dashboard/clientDataReceived.interface";
 import { AdminNotificationParams } from "interfaces/dashboard/adminNotifications.interface";
 
-
 export function getClients(key: string, params: Params) {
   return useQuery({
     queryKey: [key, params],

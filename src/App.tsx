@@ -30,7 +30,10 @@ import DissolutionRoadmap from "pages/AdminDashboard/clients/dissolutionRoadmap/
 import { DocHubView } from "pages/UserDashboard/DocHubView";
 import { AdminDocHubView } from "pages/AdminDashboard/DocHubAdmin";
 import { AuthProvider, useAuth } from "./context/auth.context";
+
+import { SupabaseProvider } from "context/supabase.contest";
 import { RedirectProvider } from "context/redirect.context";
+
 
 const RedirectIfLoggedIn: React.FC<{
   children: JSX.Element;
@@ -224,7 +227,9 @@ const App: React.FC = () => {
     <Router>
       <AuthProvider>
         <RedirectProvider>
-          <AppRoutes />
+          <SupabaseProvider>
+            <AppRoutes />
+          </SupabaseProvider>
         </RedirectProvider>
       </AuthProvider>
     </Router>

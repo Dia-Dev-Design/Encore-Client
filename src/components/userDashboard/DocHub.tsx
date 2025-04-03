@@ -15,6 +15,8 @@ import { useAuth } from "context/auth.context";
 import {
   getAdminUsers,
   getUserDocumentsWithUrlsByUserId,
+  getAdminCompanies,
+  getCompanyDocumentsWithUrls,
 } from "api/adminDocHub.api";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.js`;
@@ -35,6 +37,11 @@ interface AdminUser {
   email: string;
 }
 
+interface AdminCompany {
+  companyId: string;
+  name: string;
+}
+
 const DocHub: React.FC = () => {
   const [params, setParams] = useQueryParams<Params>({
     documentLimit: 4,
@@ -49,8 +56,12 @@ const DocHub: React.FC = () => {
     null
   );
   const [isUploading, setIsUploading] = useState(false);
-  const [foundUsers, setFoundUsers] = useState<AdminUser[]>([]);
-  const [selectedUser, setSelectedUser] = useState<string>("");
+  // const [foundUsers, setFoundUsers] = useState<AdminUser[]>([]);
+  const [foundCompanies, setFoundCompanies] = useState<AdminCompany[]>([]);
+
+  // const [selectedUser, setSelectedUser] = useState<string>("");
+  const [selectedCompany, setSelectedCompany] = useState<string>("");
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -64,60 +75,102 @@ const DocHub: React.FC = () => {
       page: params.documentPage,
     },
     {
-      enabled: (!isAdmin && !selectedUser) || false,
+      enabled: (!isAdmin && !selectedCompany) || false,
     }
   );
 
+  const { data: adminCompanies, isLoading: isAdminCompaniesLoading } =
+    getAdminCompanies(CLIENT_DOCS, user?.user?.id || "", {
+      enabled: isAdmin || false,
+    });
+
+  // const {
+  //   data: userDocsData,
+  //   isLoading: isUserDocsLoading,
+  //   refetch: refetchUserDocs,
+  // } = getUserDocumentsWithUrlsByUserId(
+  //   USER_DOCS,
+  //   selectedUser,
+  //   {
+  //     limit: params.limit || params.documentLimit,
+  //     page: params.documentPage,
+  //   },
+  //   {
+  //     enabled: !!selectedUser,
+  //   }
+  // );
+
   const {
-    data: userDocsData,
-    isLoading: isUserDocsLoading,
-    refetch: refetchUserDocs,
-  } = getUserDocumentsWithUrlsByUserId(
+    data: companyDocsData,
+    isLoading: isCompanyDocsLoading,
+    refetch: refetchCompanyDocs,
+  } = getCompanyDocumentsWithUrls(
     USER_DOCS,
-    selectedUser,
+    selectedCompany || "", // still pass a string, even if empty
     {
       limit: params.limit || params.documentLimit,
       page: params.documentPage,
     },
     {
-      enabled: !!selectedUser,
+      enabled: !!selectedCompany, // controls actual fetching
     }
   );
 
-  const { data: adminUsers, isLoading: isAdminLoading } = getAdminUsers(
-    CLIENT_DOCS,
-    user?.user?.id || "",
-    {
-      enabled: isAdmin || false,
-    }
-  );
+  // const { data: adminUsers, isLoading: isAdminLoading } = getAdminUsers(
+  //   CLIENT_DOCS,
+  //   user?.user?.id || "",
+  //   {
+  //     enabled: isAdmin || false,
+  //   }
+  // );
+
+  // useEffect(() => {
+  //   if (adminUsers) {
+  //     const map = new Map();
+
+  //     adminUsers.forEach((user: AdminUser) => {
+  //       if (!map.has(user.userId)) {
+  //         map.set(user.userId, user);
+  //       }
+  //     });
+
+  //     setFoundUsers(Array.from(map.values()));
+  //     console.log("foundUsers set to:", Array.from(map.values()));
+  //   }
+  // }, [adminUsers]);
 
   useEffect(() => {
-    if (adminUsers) {
+    if (adminCompanies) {
       const map = new Map();
 
-      adminUsers.forEach((user: AdminUser) => {
-        if (!map.has(user.userId)) {
-          map.set(user.userId, user);
+      adminCompanies.forEach((company: AdminCompany) => {
+        if (!map.has(company.companyId)) {
+          map.set(company.companyId, company);
         }
       });
 
-      setFoundUsers(Array.from(map.values()));
-      console.log("foundUsers set to:", Array.from(map.values()));
+      setFoundCompanies(Array.from(map.values()));
+      console.log("foundCompanies set to:", Array.from(map.values()));
     }
-  }, [adminUsers]);
+  }, [adminCompanies]);
 
-  const data = selectedUser
-    ? userDocsData
-    : user?.isAdmin
-    ? adminUsers
-    : clientData;
-  const isLoading = selectedUser
-    ? isUserDocsLoading
-    : user?.isAdmin
-    ? isAdminLoading
-    : isClientLoading;
-  const refetch = selectedUser ? refetchUserDocs : refetchClient;
+  // const data = selectedUser
+  //   ? userDocsData
+  //   : user?.isAdmin
+  //   ? adminUsers
+  //   : clientData;
+  // const isLoading = selectedUser
+  //   ? isUserDocsLoading
+  //   : user?.isAdmin
+  //   ? isAdminLoading
+  //   : isClientLoading;
+  // const refetch = selectedUser ? refetchUserDocs : refetchClient;
+
+  const data = selectedCompany ? companyDocsData : clientData;
+
+  const isLoading = selectedCompany ? isCompanyDocsLoading : isClientLoading;
+
+  const refetch = selectedCompany ? refetchCompanyDocs : refetchClient;
 
   const uploadMutation = uploadDocuments();
 
@@ -180,8 +233,15 @@ const DocHub: React.FC = () => {
     });
   };
 
-  const handleUserChange = (value: string) => {
-    setSelectedUser(value);
+  // const handleUserChange = (value: string) => {
+  //   setSelectedUser(value);
+  //   setParams({
+  //     documentPage: 1,
+  //   });
+  // };
+
+  const handleCompanyChange = (value: string) => {
+    setSelectedCompany(value);
     setParams({
       documentPage: 1,
     });
@@ -194,10 +254,10 @@ const DocHub: React.FC = () => {
           <div className="border border-[#C2C9CE] rounded-lg flex flex-col h-[calc(100%-3.5rem)]">
             <div className="flex justify-between px-6 py-[14px] items-center border-b border-[#C2C9CE] flex-shrink-0">
               <h3 className="text-2xl font-semibold font-figtree">
-                {selectedUser ? "User Documents" : "Uploaded Documents"}
+                {selectedCompany ? "Company Documents" : "Uploaded Documents"}
               </h3>
               <div className="flex items-center gap-4">
-                {user?.isAdmin && foundUsers.length > 0 && (
+                {/* {user?.isAdmin && foundUsers.length > 0 && (
                   <div className="flex flex-col">
                     <label className="text-sm font-medium text-gray-600 mb-1">
                       Select User
@@ -216,7 +276,28 @@ const DocHub: React.FC = () => {
                       style={{ borderRadius: "6px" }}
                     />
                   </div>
+                )} */}
+                {user?.isAdmin && foundCompanies.length > 0 && (
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-gray-600 mb-1">
+                      Select Company
+                    </label>
+                    <Select
+                      placeholder="Select Company"
+                      className="w-64"
+                      size="large"
+                      onChange={handleCompanyChange}
+                      value={selectedCompany || undefined}
+                      allowClear
+                      options={foundCompanies.map((company) => ({
+                        value: company.companyId,
+                        label: company.name,
+                      }))}
+                      style={{ borderRadius: "6px" }}
+                    />
+                  </div>
                 )}
+
                 <input
                   type="file"
                   accept="application/pdf"
@@ -289,7 +370,8 @@ const DocHub: React.FC = () => {
 
       {selectedDocument && (
         <PDFViewer
-          url={`http://localhost:8080/api/dochub/documents/${selectedDocument.id}/stream`}
+          // url={`${process.env.REACT_APP_API_BASE_URL}api/dochub/documents/${selectedDocument.id}/stream`}
+          url={`${process.env.REACT_APP_API_BASE_URL}api/dochub/company-documents/${selectedDocument.id}/stream`}
           fileName={selectedDocument.name}
           visible={previewVisible}
           onClose={handleClosePreview}

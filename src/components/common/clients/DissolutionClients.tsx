@@ -90,7 +90,7 @@ const columns = (
     title: "Assigned to",
     dataIndex: "assignedTo",
     key: "assignedTo",
-    render: (assignedTo) => assignedTo?.name || "Unassigned",
+    render: (assignedTo) => assignedTo.name,
     sorter: true,
     defaultSortOrder: loadOrders("assignedTo", params),
   },

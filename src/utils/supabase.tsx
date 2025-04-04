@@ -1,10 +1,16 @@
-import { createClient} from '@supabase/supabase-js'
+import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.REACT_APP_PUBLIC_SUPABASE_URL || ''
-const supabaseKey = process.env.REACT_APP_PUBLIC_SUPABASE_ANON_KEY || ''
+const supabaseUrl = process.env.REACT_APP_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.REACT_APP_PUBLIC_SUPABASE_ANON_KEY;
 
-console.log("This is url", supabaseUrl)
-console.log("This is url", supabaseKey)
+if (!supabaseUrl) {
+  console.error("Missing REACT_APP_PUBLIC_SUPABASE_URL environment variable");
+}
 
-// Create a single instance to be used throughout the app
-export const supabase = createClient(supabaseUrl, supabaseKey)
+if (!supabaseKey) {
+  console.error(
+    "Missing REACT_APP_PUBLIC_SUPABASE_ANON_KEY environment variable"
+  );
+}
+
+export const supabase = createClient(supabaseUrl || "", supabaseKey || "");

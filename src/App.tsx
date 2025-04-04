@@ -31,7 +31,7 @@ import { DocHubView } from "pages/UserDashboard/DocHubView";
 import { AdminDocHubView } from "pages/AdminDashboard/DocHubAdmin";
 import { AuthProvider, useAuth } from "./context/auth.context";
 
-import { SupabaseProvider } from "context/supabase.contest";
+import { SupabaseProvider } from "context/supabase.context";
 import { RedirectProvider } from "context/redirect.context";
 
 

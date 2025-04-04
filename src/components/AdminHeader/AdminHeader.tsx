@@ -10,7 +10,7 @@ import BlackXImage from "assets/icons/BlackX.svg";
 import { ClientDataReceived } from "interfaces/dashboard/clientDataReceived.interface";
 import { HeaderTitle } from "interfaces/dashboard/headerTitle.enum";
 import { useAuth } from "context/auth.context";
-import { useSupabase } from "context/supabase.contest";
+import { useSupabase } from "context/supabase.context";
 import { RealtimeChannel } from "@supabase/supabase-js";
 
 interface AdminHeaderProps {
@@ -61,7 +61,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 
   useEffect(() => {
     console.log("Setting up update monitoring for chatType field");
-  
+
     const channel: RealtimeChannel = supabase
       .channel("chat-type-updates")
       .on(
@@ -72,13 +72,19 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
           table: "ChatThread",
           // filter: 'chatType=eq."CHAT_LAWYER"', // Only get updates where chatType is CHAT_LAWYER
         },
-        (payload) => {
+        (payload: {
+          new: { chatType: string; [key: string]: any };
+          old: { chatType: string; [key: string]: any };
+        }) => {
           console.log("Chat updated to CHAT_LAWYER:", payload);
           console.log("Updated chat data:", payload.new);
           console.log("Previous chat data:", payload.old);
-          
+
           // Optional: Check if this was actually a change from something else to CHAT_LAWYER
-          if (payload.old.chatType !== "CHAT_LAWYER" && payload.new.chatType === "CHAT_LAWYER") {
+          if (
+            payload.old.chatType !== "CHAT_LAWYER" &&
+            payload.new.chatType === "CHAT_LAWYER"
+          ) {
             console.log("Chat was converted to lawyer chat!");
             // Handle notification or state update here
             // setNotificationsData((previous: any) => [
@@ -88,33 +94,33 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
           }
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         console.log("Subscription status:", status);
-        
-        if (status === 'SUBSCRIBED') {
+
+        if (status === "SUBSCRIBED") {
           console.log("Successfully subscribed to chatType updates");
         }
-        
-        if (status === 'CHANNEL_ERROR') {
+
+        if (status === "CHANNEL_ERROR") {
           console.error("Failed to subscribe to chatType updates");
         }
       });
-      
+
     console.log("Channel status:", channel.state);
-      
+
     return () => {
       console.log("Cleaning up subscription");
       channel.unsubscribe();
     };
   }, []);
-    
-    // if (lastNotificationCounter < 0) {
-    //     setLastNotificationCounter(notificationsData?.totalUnread);
-    // } else {
-    //     if (lastNotificationCounter !== notificationsData?.totalUnread){
-    //         setLastNotificationCounter(notificationsData?.totalUnread);
-    //     }
-    // }
+
+  // if (lastNotificationCounter < 0) {
+  //     setLastNotificationCounter(notificationsData?.totalUnread);
+  // } else {
+  //     if (lastNotificationCounter !== notificationsData?.totalUnread){
+  //         setLastNotificationCounter(notificationsData?.totalUnread);
+  //     }
+  // }
   return (
     <>
       <header

@@ -228,7 +228,7 @@ const DocHub: React.FC = () => {
 
                 {!isAdmin && (
                   <button
-                    className={`bg-[#285464] text-white font-figtree font-medium py-2 px-4 rounded-md transition duration-300 ease-in-out ${
+                    className={`bg-[#1975D2] text-white font-figtree font-medium py-2 px-4 rounded-md transition duration-300 ease-in-out ${
                       isUploading
                         ? "opacity-50 cursor-not-allowed"
                         : "hover:bg-[#1a3a47]"

@@ -208,7 +208,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
               Report a Bug
             </button>
             <button
-              className="w-full py-2 px-4 text-left text-primaryLinkWater-950"
+              className="w-full py-2 px-4 text-left text-[#E23939]"
               onClick={handleLogout}
             >
               Logout

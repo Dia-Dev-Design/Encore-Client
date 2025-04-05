@@ -13,6 +13,7 @@ import {
   getAdminUser,
   hideAdminNotifications,
 } from "api/dashboard.api";
+
 import { ViewProps } from "interfaces/dashboard/viewProps.interface";
 import { useQueryParams } from "helper/query.helper";
 import { AdminNotificationParams } from "interfaces/dashboard/adminNotifications.interface";
@@ -21,6 +22,13 @@ import { appRoute } from "consts/routes.const";
 import { useAuth } from "context/auth.context";
 import notificationService from "services/NotificationService";
 import { useQueryClient } from "@tanstack/react-query";
+import { createClient, SupabaseClient, RealtimeChannel } from '@supabase/supabase-js'
+
+interface TableRecord {
+    id: number;
+    field_name: string;
+    // Add other fields as needed
+  }
 
 const DashboardView: React.FC<ViewProps> = ({
   isSideBarCollapsed,

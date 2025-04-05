@@ -445,16 +445,41 @@ export function getChatInfo(key: string, thread_id: string) {
     });
 }
 
-export function getLawyerChats(key: string, companyId: string) {
+// export function getLawyerChats(key: string, companyId: string, adminId: string) {
+//     return useQuery({
+//         queryKey: [key, companyId],
+//         queryFn: ({ signal }) =>
+//             apiClient
+//                 .get(`/api/chatbot/admin/threads/all/${companyId}/${adminId}`, {
+//                     signal,
+//                 })
+//             .then(unwrapAxiosResponse)
+//             .finally((resp: any) => {
+//                 console.log("This is our response from getlawyerchats", resp)
+//             }), 
+//             enabled: !!companyId,
+//             refetchInterval: 10000
+//     });
+// }
+
+export function getLawyerChats(key: string, companyId: string, adminId: string) {
     return useQuery({
         queryKey: [key, companyId],
-        queryFn: ({ signal }) =>
-            apiClient
-                .get(`/api/chatbot/admin/threads/all/${companyId}`, {
-                    signal,
-                })
-            .then(unwrapAxiosResponse),
-            enabled: !!companyId,
-            refetchInterval: 10000
+        queryFn: async ({ signal }) => {
+            try {
+                const response = await apiClient.get(
+                    `/api/chatbot/admin/threads/all/${companyId}/${adminId}`,
+                    { signal }
+                );
+                const data = unwrapAxiosResponse(response);
+                console.log("Successfully fetched lawyer chats:", data);
+                return data;
+            } catch (error) {
+                console.error("Error fetching lawyer chats:", error);
+                throw error;
+            }
+        },
+        enabled: !!companyId,
+        // refetchInterval: 10000
     });
 }

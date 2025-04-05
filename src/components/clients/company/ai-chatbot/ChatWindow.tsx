@@ -38,7 +38,7 @@ const ChatWindow: React.FC<ChatWindowProps> =({
     const [questionSentence, setQuestionSentence] = useState<string>("");
     
     // Correctly set isLawyer based on user data
-    const isLawyer = userData?.isLawyer === true;
+    const isLawyer = userData?.user.isLawyer === true;
     
     // Update SSE connection with correct user role
     const { data, error } = adminSSE(userData?.id, chatbotThread?.id, isLawyer);

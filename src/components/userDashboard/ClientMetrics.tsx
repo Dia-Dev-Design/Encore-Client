@@ -100,7 +100,7 @@ const ClientMetrics: React.FC = () => {
            <MetricCard
               isLoading={isLoading}
               label={"Time Saved"}
-              total={`${costMetricsData?.timeSaved.hours} Hrs`}
+              total={`${costMetricsData?.timeSaved.hours.toFixed(2)} Hrs`}
               changeRate={0}
               tendencyUp={true}
               cardType={MetricCardType.descriptiveCard}

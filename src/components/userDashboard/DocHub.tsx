@@ -200,10 +200,10 @@ const DocHub: React.FC = () => {
                 {user?.isAdmin && foundUsers.length > 0 && (
                   <div className="flex flex-col">
                     <label className="text-sm font-medium text-gray-600 mb-1">
-                      Select User
+                      Select Company
                     </label>
                     <Select
-                      placeholder="Select User"
+                      placeholder="Select Company"
                       className="w-64"
                       size="large"
                       onChange={handleUserChange}

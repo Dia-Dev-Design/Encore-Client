@@ -113,14 +113,7 @@ const Metrics: React.FC = () => {
                                 tendencyUp={data.onboardings.changeRate >= 0}
                                 cardType={MetricCardType.basicCard}
                             />
-                            <MetricCard
-                                isLoading={isLoading}
-                                label={"Active Dissolutions"}
-                                total={data.dissolutions.total.toString()}
-                                changeRate={data.dissolutions.changeRate}
-                                tendencyUp={data.dissolutions.changeRate >= 0}
-                                cardType={MetricCardType.basicCard}
-                            />
+                            
                             <MetricCard
                                 isLoading={isLoading}
                                 label={"Overdue Tasks"}

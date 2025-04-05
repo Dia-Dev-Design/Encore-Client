@@ -166,7 +166,7 @@ const RegisterWizard: React.FC = () => {
     let data = {};
 
     if (currentStep === 3) {
-      navigate(appRoute.clients.registered);
+      window.location.reload();
     } else {
       switch (currentStep) {
         case 0:

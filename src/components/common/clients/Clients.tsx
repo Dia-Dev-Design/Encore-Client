@@ -6,13 +6,13 @@ import { ReactComponent as VerticalDotsIcon } from "assets/icons/vertical_dots_g
 import { useQueryParams } from "helper/query.helper";
 import DropdownActions from "./DropdownActions";
 import {
-  DISSOLUTION_CLIENTS,
   LAWYER_CHATBOT_CLIENTS,
   PROSPECT_CLIENTS,
+  CLIENT_ACTIVATION,
 } from "consts/query.const";
 import { useLocation } from "react-router-dom";
 import ProspectClients from "./ProspectClients";
-import DissolutionClients from "./DissolutionClients";
+import ClientActivation from "./ClientActivation";
 import LawyerChatbotClients from "./LawyerChatbotClients";
 import clsx from "clsx";
 import { ClientsTabsMap } from "consts/clients.const";
@@ -89,10 +89,10 @@ const Clients: React.FC<ClientsProps> = ({ isPage = false }) => {
 
   const items: TabsProps["items"] = [
     {
-      key: PROSPECT_CLIENTS,
-      label: ClientsTabsMap[PROSPECT_CLIENTS],
+      key: CLIENT_ACTIVATION,
+      label: ClientsTabsMap[CLIENT_ACTIVATION],
       children: (
-        <ProspectClients
+        <ClientActivation
           isPage={isPage}
           selectedRowKeys={selectedRowKeys}
           setSelectedRowKeys={setSelectedRowKeys}
@@ -100,10 +100,10 @@ const Clients: React.FC<ClientsProps> = ({ isPage = false }) => {
       ),
     },
     {
-      key: DISSOLUTION_CLIENTS,
-      label: ClientsTabsMap[DISSOLUTION_CLIENTS],
+      key: PROSPECT_CLIENTS,
+      label: ClientsTabsMap[PROSPECT_CLIENTS],
       children: (
-        <DissolutionClients
+        <ProspectClients
           isPage={isPage}
           selectedRowKeys={selectedRowKeys}
           setSelectedRowKeys={setSelectedRowKeys}
@@ -130,7 +130,7 @@ const Clients: React.FC<ClientsProps> = ({ isPage = false }) => {
           <div className="flex justify-between px-6 py-[14px] items-center border-b border-[#C2C9CE]">
             <div>
               <h3 className="text-2xl font-semibold font-figtree">
-                {isPage ? ClientsTabsMap[currentTab] : "Clients"}
+                {"Client Management"}
               </h3>
             </div>
             {selectedRowKeys.length > 0 && (

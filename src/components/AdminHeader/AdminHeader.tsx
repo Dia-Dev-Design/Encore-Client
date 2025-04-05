@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tooltip } from "antd";
 import NotificationIcon from "assets/icons/notificationsIcon.svg";
 import DarkNotificationIcon from "assets/icons/DarkNotificationsIcon.svg";
@@ -10,8 +10,13 @@ import BlackXImage from "assets/icons/BlackX.svg";
 import { ClientDataReceived } from "interfaces/dashboard/clientDataReceived.interface";
 import { HeaderTitle } from "interfaces/dashboard/headerTitle.enum";
 import { useAuth } from "context/auth.context";
+
 import apiClient from "api/client.config";
 import { unwrapAxiosResponse } from "api/client.config";
+
+import { useSupabase } from "context/supabase.contest";
+import { RealtimeChannel } from "@supabase/supabase-js";
+
 
 interface AdminHeaderProps {
   isUser: HeaderTitle;
@@ -32,6 +37,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
   const [bugMessage, setBugMessage] = useState("");
   const [bugSubmitted, setBugSubmitted] = useState(false);
   const { logOutUser } = useAuth();
+  const supabase = useSupabase();
 
   const handleLogout = () => {
     logOutUser();
@@ -47,6 +53,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
       hideNotifications();
     }
   };
+
 
   // const handleBugSubmit = () => {
   //   setBugSubmitted(true);
@@ -87,8 +94,65 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
       console.log("Error sending bug report:", error);
       alert('Error sending bug report. Please try again.');
     }
+
   };
 
+  // useEffect(() => {
+  //   console.log("Setting up update monitoring for chatType field");
+  
+  //   const channel: RealtimeChannel = supabase
+  //     .channel("chat-type-updates")
+  //     .on(
+  //       "postgres_changes",
+  //       {
+  //         event: "UPDATE", // Change to UPDATE instead of INSERT
+  //         schema: "public",
+  //         table: "ChatThread",
+  //         // filter: 'chatType=eq."CHAT_LAWYER"', // Only get updates where chatType is CHAT_LAWYER
+  //       },
+  //       (payload) => {
+  //         console.log("Chat updated to CHAT_LAWYER:", payload);
+  //         console.log("Updated chat data:", payload.new);
+  //         console.log("Previous chat data:", payload.old);
+          
+  //         // Optional: Check if this was actually a change from something else to CHAT_LAWYER
+  //         if (payload.old.chatType !== "CHAT_LAWYER" && payload.new.chatType === "CHAT_LAWYER") {
+  //           console.log("Chat was converted to lawyer chat!");
+  //           // Handle notification or state update here
+  //           // setNotificationsData((previous: any) => [
+  //           //   ...previous,
+  //           //   payload.new as TableRecord,
+  //           // ]);
+  //         }
+  //       }
+  //     )
+  //     .subscribe((status) => {
+  //       console.log("Subscription status:", status);
+        
+  //       if (status === 'SUBSCRIBED') {
+  //         console.log("Successfully subscribed to chatType updates");
+  //       }
+        
+  //       if (status === 'CHANNEL_ERROR') {
+  //         console.error("Failed to subscribe to chatType updates");
+  //       }
+  //     });
+      
+  //   console.log("Channel status:", channel.state);
+      
+  //   return () => {
+  //     console.log("Cleaning up subscription");
+  //     channel.unsubscribe();
+  //   };
+  // }, []);
+    
+    // if (lastNotificationCounter < 0) {
+    //     setLastNotificationCounter(notificationsData?.totalUnread);
+    // } else {
+    //     if (lastNotificationCounter !== notificationsData?.totalUnread){
+    //         setLastNotificationCounter(notificationsData?.totalUnread);
+    //     }
+    // }
   return (
     <>
       <header
@@ -182,7 +246,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
               Report a Bug
             </button>
             <button
-              className="w-full py-2 px-4 text-left text-primaryLinkWater-950"
+              className="w-full py-2 px-4 text-left text-[#E23939]"
               onClick={handleLogout}
             >
               Logout

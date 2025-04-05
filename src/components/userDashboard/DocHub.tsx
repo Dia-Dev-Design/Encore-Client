@@ -228,7 +228,7 @@ const DocHub: React.FC = () => {
 
                 {!isAdmin && (
                   <button
-                    className={`bg-[#285464] text-white font-figtree font-medium py-2 px-4 rounded-md transition duration-300 ease-in-out ${
+                    className={`bg-[#1975D2] text-white font-figtree font-medium py-2 px-4 rounded-md transition duration-300 ease-in-out ${
                       isUploading
                         ? "opacity-50 cursor-not-allowed"
                         : "hover:bg-[#1a3a47]"
@@ -289,7 +289,7 @@ const DocHub: React.FC = () => {
 
       {selectedDocument && (
         <PDFViewer
-          url={`${process.env.REACT_APP_API_BASE_URL}api/dochub/documents/${selectedDocument.id}/stream`}
+          url={`http://localhost:8080/api/dochub/documents/${selectedDocument.id}/stream`}
           fileName={selectedDocument.name}
           visible={previewVisible}
           onClose={handleClosePreview}

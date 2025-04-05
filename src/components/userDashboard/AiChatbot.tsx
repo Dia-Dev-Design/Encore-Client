@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CategoryThread } from "interfaces/clientDashboard/categoryThread.interface";
 import ModalSearchChats from "./clientChatbot/modals/ModalSearchChats";
 import { ChatTypeEnum } from "interfaces/clientDashboard/chatType.enum";
+import { useSupabase } from "context/supabase.contest";
 
 const AiChatbot: React.FC = () => {
     const queryClient = useQueryClient();
@@ -37,6 +38,23 @@ const AiChatbot: React.FC = () => {
     const { data: chatHistoryData, isLoading: chatHistoryLoading } = getChatHistory(CHAT_HISTORY, selectedChatId);
     const { data: threadsInCategory, isLoading: threadsInCategoryLoading } = getChatsFromCategory(CATEGORY_CHATS, selectedCategoryId);
 
+      const supabase = useSupabase();
+
+
+    //   console.log(
+    //     "This is the chatbotThreadType",
+    //     chatbotThreadType
+    //   );
+    
+    //   useEffect(() => {
+    //     console.log(
+    //       "This is the chatbotThreadType",
+    //       chatbotThreadType
+    //     );
+    //   }, [historyConversation]);
+
+
+
     useEffect(() => {
         if (chatHistoryData && chatHistoryData.response) {
             // Check if we have valid messages
@@ -54,7 +72,10 @@ const AiChatbot: React.FC = () => {
                         url: msg.url || undefined,
                         isStreaming: false,
                         isError: false,
+                        forLawyer: msg.forLawyer
                     };
+
+                    console.log("This is historyNode====>", historyNode)
                     
                     return historyNode;
                 });

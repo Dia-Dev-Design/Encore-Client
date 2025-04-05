@@ -16,7 +16,7 @@ export const getChatbotThread = () =>
 export const askQuestion = () =>
     useMutation({
     mutationFn: (params: Question) =>
-        apiClient.post(`/api/chatbot/ask`, params).then(unwrapAxiosResponse),
+        apiClient.post(`/api/chatbot/ask`, params).then(unwrapAxiosResponse).then((response) => console.log("This is the ask question response", response))
     });
 
 

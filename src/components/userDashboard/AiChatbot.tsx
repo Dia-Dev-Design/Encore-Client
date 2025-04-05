@@ -74,8 +74,6 @@ const AiChatbot: React.FC = () => {
                         isError: false,
                         forLawyer: msg.forLawyer
                     };
-
-                    console.log("This is historyNode====>", historyNode)
                     
                     return historyNode;
                 });
@@ -169,6 +167,7 @@ const AiChatbot: React.FC = () => {
                     selectedChatType={selectedChatType}
                     threadsInCategory={threadsInCategory}
                     threadsInCategoryLoading={threadsInCategoryLoading}
+                    chatId={selectedChatId}
                     setSelectedChatType={setSelectedChatType}
                     chatbotThread={chatbotThread}
                     categoryThread={categoryThread}

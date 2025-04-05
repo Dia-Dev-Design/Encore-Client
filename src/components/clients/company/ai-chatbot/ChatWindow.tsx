@@ -22,6 +22,7 @@ interface ChatWindowProps {
     setSelectedChatType: (type: ChatSpaceType) => void;
     chatbotThread: ChatbotThread | undefined;
     chatbotThreadType: ChatTypeEnum | undefined;
+    selectedChatId: string;
     setChatbotThread: (chat: ChatbotThread) => void;
     invalidateMainQueries: () => void;
 };

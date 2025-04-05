@@ -10,8 +10,13 @@ import BlackXImage from "assets/icons/BlackX.svg";
 import { ClientDataReceived } from "interfaces/dashboard/clientDataReceived.interface";
 import { HeaderTitle } from "interfaces/dashboard/headerTitle.enum";
 import { useAuth } from "context/auth.context";
+
+import apiClient from "api/client.config";
+import { unwrapAxiosResponse } from "api/client.config";
+
 import { useSupabase } from "context/supabase.contest";
 import { RealtimeChannel } from "@supabase/supabase-js";
+
 
 interface AdminHeaderProps {
   isUser: HeaderTitle;
@@ -49,14 +54,47 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
     }
   };
 
-  const handleBugSubmit = () => {
-    setBugSubmitted(true);
-    setTimeout(() => {
-      setBugSubmitted(false);
-      setIsBugModalOpen(false);
-      setBugSubject("");
-      setBugMessage("");
-    }, 4000);
+
+  // const handleBugSubmit = () => {
+  //   setBugSubmitted(true);
+  //   setTimeout(() => {
+  //     setBugSubmitted(false);
+  //     setIsBugModalOpen(false);
+  //     setBugSubject('')
+  //     setBugMessage('')
+  //   }, 4000);
+  // };
+
+  const handleBugSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      console.log("report a bug request: ", {
+        name: isUser === HeaderTitle.Admin ? user?.user?.name : user.name,
+        subject: bugSubject,
+        message: bugMessage,
+        email: isUser === HeaderTitle.Admin ? user?.user?.email : user.email,
+      })
+      await apiClient.post('/api/email/bug-report', {
+        name: isUser === HeaderTitle.Admin ? user?.user?.name : user.name,
+        subject: bugSubject,
+        message: bugMessage,
+        email: isUser === HeaderTitle.Admin ? user?.user?.email : user.email,
+      });
+
+      setBugSubmitted(true);
+      setBugSubject('');
+      setBugMessage('');
+
+      setTimeout(() => {
+        setBugSubmitted(false);
+        setIsBugModalOpen(false);
+      }, 1500);
+    } catch (error) {
+      console.log("Error sending bug report:", error);
+      alert('Error sending bug report. Please try again.');
+    }
+
   };
 
   // useEffect(() => {
@@ -157,8 +195,8 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
               {user && user.name
                 ? user.name
                 : user && user.user && user.user.name
-                ? user.user.name
-                : "User"}
+                  ? user.user.name
+                  : "User"}
             </span>
             <button
               className="w-10 h-10 rounded-full overflow-hidden"
@@ -190,8 +228,8 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
               {user && user.name
                 ? user.name
                 : user && user.user && user.user.name
-                ? user.user.name
-                : "User"}
+                  ? user.user.name
+                  : "User"}
             </p>
             <p className="font-figtree text-sm text-primaryMariner-900 font-medium">
               {user.email}
@@ -222,15 +260,15 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
           </button>
         </div>
       )}
-      {isBugModalOpen && (
+      {/* {isBugModalOpen && (
         <div className="absolute top-20 right-20 w-1/4 bg-gray-100 border border-greys-300 z-40 h-4/4 flex flex-col">
           <div className="border border-greys-300 py-2 px-4 h-1/4 flex flex-col items-center justify-center gap-1">
             <p className="font-figtree text-2xl text-primaryMariner-900 font-medium">
               {user && user.name
                 ? user.name
                 : user && user.user && user.user.name
-                ? user.user.name
-                : "User"}
+                  ? user.user.name
+                  : "User"}
             </p>
             <br />
             <hr />
@@ -249,7 +287,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
                 </div>
               ) : (
                 <form
-                  onSubmit={() => handleBugSubmit()}
+                  onSubmit={handleBugSubmit}
                   className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-[100%] max-w-md mx-auto mt-3"
                 >
                   <div>
@@ -299,7 +337,80 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
             <img src={BlackXImage} alt="Close" />
           </button>
         </div>
+      )} */}
+      {isBugModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-gray-100 border border-gray-300 rounded-lg shadow-lg w-full max-w-xl mx-4 md:mx-0">
+            <div className="py-4 px-6 border-b border-gray-300 flex justify-between items-center">
+              <h2 className="font-figtree text-2xl text-primaryMariner-900 font-medium">
+               Report a bug
+              </h2>
+              <button
+                type="button"
+                onClick={() => setIsBugModalOpen(false)}
+                className="hover:opacity-70"
+              >
+                <img src={BlackXImage} alt="Close" />
+              </button>
+            </div>
+
+            <div className="py-4 px-6">
+              {bugSubmitted ? (
+                <div className="text-center py-8">
+                  <h3 className="text-xl font-semibold">Thank you for reporting the bug!</h3>
+                  <p className="text-gray-600">Our team will address this soon.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleBugSubmit} className="space-y-4">
+                  <div>
+                    <label
+                      htmlFor="subject"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Subject
+                    </label>
+                    <input
+                      value={bugSubject}
+                      onChange={(e) => setBugSubject(e.target.value)}
+                      type="text"
+                      id="subject"
+                      name="subject"
+                      required
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primaryMariner-900 focus:ring-primaryMariner-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="message"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Message
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      value={bugMessage}
+                      onChange={(e) => setBugMessage(e.target.value)}
+                      rows={8}
+                      required
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primaryMariner-900 focus:ring-primaryMariner-900"
+                    ></textarea>
+                  </div>
+
+                  <button
+                    className="w-full py-2 px-4 text-white font-semibold bg-primaryViking-800 rounded-md hover:bg-primaryMariner-900 transition-colors"
+                    type="submit"
+                  >
+                    Submit
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
       )}
+
     </>
   );
 };

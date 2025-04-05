@@ -59,54 +59,54 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
     }, 4000);
   };
 
-  useEffect(() => {
-    console.log("Setting up update monitoring for chatType field");
+  // useEffect(() => {
+  //   console.log("Setting up update monitoring for chatType field");
   
-    const channel: RealtimeChannel = supabase
-      .channel("chat-type-updates")
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE", // Change to UPDATE instead of INSERT
-          schema: "public",
-          table: "ChatThread",
-          // filter: 'chatType=eq."CHAT_LAWYER"', // Only get updates where chatType is CHAT_LAWYER
-        },
-        (payload) => {
-          console.log("Chat updated to CHAT_LAWYER:", payload);
-          console.log("Updated chat data:", payload.new);
-          console.log("Previous chat data:", payload.old);
+  //   const channel: RealtimeChannel = supabase
+  //     .channel("chat-type-updates")
+  //     .on(
+  //       "postgres_changes",
+  //       {
+  //         event: "UPDATE", // Change to UPDATE instead of INSERT
+  //         schema: "public",
+  //         table: "ChatThread",
+  //         // filter: 'chatType=eq."CHAT_LAWYER"', // Only get updates where chatType is CHAT_LAWYER
+  //       },
+  //       (payload) => {
+  //         console.log("Chat updated to CHAT_LAWYER:", payload);
+  //         console.log("Updated chat data:", payload.new);
+  //         console.log("Previous chat data:", payload.old);
           
-          // Optional: Check if this was actually a change from something else to CHAT_LAWYER
-          if (payload.old.chatType !== "CHAT_LAWYER" && payload.new.chatType === "CHAT_LAWYER") {
-            console.log("Chat was converted to lawyer chat!");
-            // Handle notification or state update here
-            // setNotificationsData((previous: any) => [
-            //   ...previous,
-            //   payload.new as TableRecord,
-            // ]);
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log("Subscription status:", status);
+  //         // Optional: Check if this was actually a change from something else to CHAT_LAWYER
+  //         if (payload.old.chatType !== "CHAT_LAWYER" && payload.new.chatType === "CHAT_LAWYER") {
+  //           console.log("Chat was converted to lawyer chat!");
+  //           // Handle notification or state update here
+  //           // setNotificationsData((previous: any) => [
+  //           //   ...previous,
+  //           //   payload.new as TableRecord,
+  //           // ]);
+  //         }
+  //       }
+  //     )
+  //     .subscribe((status) => {
+  //       console.log("Subscription status:", status);
         
-        if (status === 'SUBSCRIBED') {
-          console.log("Successfully subscribed to chatType updates");
-        }
+  //       if (status === 'SUBSCRIBED') {
+  //         console.log("Successfully subscribed to chatType updates");
+  //       }
         
-        if (status === 'CHANNEL_ERROR') {
-          console.error("Failed to subscribe to chatType updates");
-        }
-      });
+  //       if (status === 'CHANNEL_ERROR') {
+  //         console.error("Failed to subscribe to chatType updates");
+  //       }
+  //     });
       
-    console.log("Channel status:", channel.state);
+  //   console.log("Channel status:", channel.state);
       
-    return () => {
-      console.log("Cleaning up subscription");
-      channel.unsubscribe();
-    };
-  }, []);
+  //   return () => {
+  //     console.log("Cleaning up subscription");
+  //     channel.unsubscribe();
+  //   };
+  // }, []);
     
     // if (lastNotificationCounter < 0) {
     //     setLastNotificationCounter(notificationsData?.totalUnread);

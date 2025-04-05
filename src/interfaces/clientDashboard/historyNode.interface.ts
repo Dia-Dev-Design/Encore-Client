@@ -6,6 +6,7 @@ export interface HistoryNode {
     fileId?: string;
     isStreaming?: boolean;
     isError?: boolean;
+    forLawyer: boolean
 }
 
 export interface DocumentNode {

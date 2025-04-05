@@ -15,6 +15,8 @@ function adminSSE(userID :any, chatbotID: any, isLawyer: boolean) {
         console.log("Connecting to SSE URL:", url);
         const eventSource = new EventSource(url);
 
+        // console.log("This is SSE eventSource", eventSource)
+
         eventSource.onerror = (e) => {
             console.error("SSE Connection error:", e);
             setError('Connection lost. Trying to reconnect...');
@@ -27,10 +29,11 @@ function adminSSE(userID :any, chatbotID: any, isLawyer: boolean) {
                 let parsedData;
                 if (typeof e.data === 'string') {
                     parsedData = e.data;
+                    // console.log("SSE data received:", parsedData);
                 } else {
                     parsedData = JSON.stringify(e.data);
+                    // console.log("SSE data received:", JSON.parse(parsedData));
                 }
-                console.log("SSE data received:", parsedData);
                 setData(parsedData);
             } catch (err) {
                 console.error('Error processing SSE message:', err);

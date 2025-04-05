@@ -14,6 +14,13 @@ const ClientConversation: React.FC<ClientConversationProps> =({historyConversati
     const conversationEndRef = useRef<HTMLDivElement>(null);
     const [isStarred, setIsStarred] = useState<boolean>(false);
     const prevHistoryLengthRef = useRef<number>(0);
+
+    useEffect(() => {
+
+        console.log("Thisb is history conversation", historyConversation)
+        console.log("This is files converstation", filesConversation)
+
+    }, [historyConversation, filesConversation])
     
     // Find if any message is in streaming state
     const hasStreamingMessage = historyConversation.some(node => node.isStreaming);

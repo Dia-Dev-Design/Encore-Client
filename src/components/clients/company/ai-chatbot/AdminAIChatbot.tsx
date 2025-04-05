@@ -10,11 +10,14 @@ import ModalSearchChatsAdmin from "./ModalSearchChatsAdmin";
 import { useParams } from "react-router-dom";
 import { ChatTypeEnum } from "interfaces/clientDashboard/chatType.enum";
 import { getAdminChatHistory, getLawyerChats } from "api/clientChatbot.api";
+import { useAuth } from "context/auth.context";
 
 const AdminAIChatbot = () => {
     const queryClient = useQueryClient();
+    const { user } = useAuth()
+    const adminId = user?.user.id
     const { companyId } = useParams<{ companyId: string }>();
-    const { data: chatbotThreadList, isLoading: chatbotThreadListLoading } = getLawyerChats(LAWYER_CHATS, companyId || "");
+    const { data: chatbotThreadList, isLoading: chatbotThreadListLoading } = getLawyerChats(LAWYER_CHATS, companyId || "", adminId || '');
 
     const [isHistoryCollapsed, setIsHistoryCollpased] = useState(false);
     const [historyConversation, setHistoryConversation] = useState<HistoryNode[]>([]);

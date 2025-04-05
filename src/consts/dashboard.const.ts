@@ -42,12 +42,12 @@ export const userSidebarOption: SidebarOption[] = [
         iconOn: DashboardIconOn,
         iconOff: DashboardIconOff,
     },
-    {
-        path: appRoute.clients.dissolutionMap,
-        label: "Dissolution Map",
-        iconOn: DissolutionIconOn,
-        iconOff: DissolutionIconOff,
-    },
+    // {
+    //     path: appRoute.clients.dissolutionMap,
+    //     label: "Dissolution Map",
+    //     iconOn: DissolutionIconOn,
+    //     iconOff: DissolutionIconOff,
+    // },
     {
         path: appRoute.clients.aiChatBot,
         label: "AI Chatbot",

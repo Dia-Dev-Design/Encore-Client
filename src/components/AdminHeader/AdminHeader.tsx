@@ -42,7 +42,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
       notificationBadgeCounter > 0 &&
       hideNotifications
     ) {
-      hideNotifications();
+      // hideNotifications();
     }
   };
 
@@ -75,7 +75,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
         <div className="flex items-center space-x-4">
           <Tooltip title="Notifications">
             <button className="relative" onClick={handleNotifications}>
-              {notificationBadgeCounter && notificationBadgeCounter >= 1 && (
+              {typeof notificationBadgeCounter === 'number' && notificationBadgeCounter > 0 && (
                 <p className="w-4 h-4 text-xs text-neutrals-white bg-statesRed-red rounded-xl text-center absolute bottom-4 left-3">
                   {notificationBadgeCounter < 9 ? notificationBadgeCounter : 9}
                 </p>

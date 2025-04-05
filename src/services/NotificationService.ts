@@ -1,9 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { SupabaseClient } from "@supabase/supabase-js";
+import { supabase } from "utils/supabase";
 
-const supabase = createClient(
-  process.env.REACT_APP_PUBLIC_SUPABASE_URL!,
-  process.env.REACT_APP_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 type NotificationCallback = (notification: any, eventType?: string) => void;
 
@@ -11,7 +8,7 @@ class NotificationService {
   private subscribers: NotificationCallback[] = [];
   private channel: any;
 
-  init(staffId: string) {
+  init(staffId: string, supabase: SupabaseClient) {
     if (this.channel) return;
 
     this.channel = supabase

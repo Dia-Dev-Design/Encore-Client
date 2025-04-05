@@ -22,7 +22,7 @@ import { appRoute } from "consts/routes.const";
 import { useAuth } from "context/auth.context";
 import notificationService from "services/NotificationService";
 import { useQueryClient } from "@tanstack/react-query";
-import { createClient, SupabaseClient, RealtimeChannel } from '@supabase/supabase-js'
+import { useSupabase } from "context/supabase.contest";
 
 interface TableRecord {
     id: number;
@@ -34,6 +34,7 @@ const DashboardView: React.FC<ViewProps> = ({
   isSideBarCollapsed,
   setIsSideBarCollapsed,
 }) => {
+  const supabase = useSupabase();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [params, setParams] = useQueryParams<AdminNotificationParams>({
@@ -66,7 +67,7 @@ const DashboardView: React.FC<ViewProps> = ({
   }, [notificationsData]);
 
   useEffect(() => {
-    notificationService.init(user?.user.id || "");
+    notificationService.init(user?.user.id || "", supabase);
     const { limit, page, category, userId } = params;
     notificationService.onNotification(() => {
       console.log("Notification received");

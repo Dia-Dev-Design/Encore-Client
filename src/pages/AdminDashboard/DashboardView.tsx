@@ -58,10 +58,10 @@ const DashboardView: React.FC<ViewProps> = ({
 
   useEffect(() => {
     if (lastNotificationCounter < 0) {
-      setLastNotificationCounter(notificationsData?.totalUnread);
+      setLastNotificationCounter(notificationsData!.totalUnread);
     } else {
-      if (lastNotificationCounter !== notificationsData?.totalUnread) {
-        setLastNotificationCounter(notificationsData?.totalUnread);
+      if (lastNotificationCounter !== notificationsData!.totalUnread) {
+        setLastNotificationCounter(notificationsData!.totalUnread);
       }
     }
   }, [notificationsData]);
@@ -80,7 +80,7 @@ const DashboardView: React.FC<ViewProps> = ({
     };
   }, [user?.user.id]);
 
-  const hideAllNotifications = async () => {
+  const markAllNotificationsAsRead = async () => {
     console.log("Hiding all notifications");
     if (notificationsData && notificationsData.list) {
       try {
@@ -116,7 +116,8 @@ const DashboardView: React.FC<ViewProps> = ({
       isSideBarCollapsed={isSideBarCollapsed}
       setIsSideBarCollapsed={setIsSideBarCollapsed}
       notificationBadgeCounter={lastNotificationCounter}
-      hideNotifications={hideAllNotifications}
+      markAllNotificationsAsRead={markAllNotificationsAsRead}
+      notificationsData={notificationsData}
     >
       <Metrics />
       <ActionableTasks />

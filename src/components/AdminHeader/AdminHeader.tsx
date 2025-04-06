@@ -12,19 +12,21 @@ import { HeaderTitle } from "interfaces/dashboard/headerTitle.enum";
 import { useAuth } from "context/auth.context";
 import { useSupabase } from "context/supabase.contest";
 import { RealtimeChannel } from "@supabase/supabase-js";
-
+import NotificationSlideover from "components/notifications/Notifications";
 interface AdminHeaderProps {
   isUser: HeaderTitle;
   user: ClientDataReceived;
   notificationBadgeCounter?: number;
-  hideNotifications?: () => void;
+  markAllNotificationsAsRead?: () => void;
+  notificationsData?: any;
 }
 
 const AdminHeader: React.FC<AdminHeaderProps> = ({
   isUser,
   user,
   notificationBadgeCounter,
-  hideNotifications,
+  markAllNotificationsAsRead,
+  notificationsData,
 }) => {
   const [isProfileMenuCollapsed, setIsProfileMenuCollapsed] = useState(false);
   const [isBugModalOpen, setIsBugModalOpen] = useState(false);
@@ -33,7 +35,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
   const [bugSubmitted, setBugSubmitted] = useState(false);
   const { logOutUser } = useAuth();
   const supabase = useSupabase();
-
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const handleLogout = () => {
     logOutUser();
   };
@@ -43,9 +45,9 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
       isUser === HeaderTitle.Admin &&
       notificationBadgeCounter &&
       notificationBadgeCounter > 0 &&
-      hideNotifications
+      markAllNotificationsAsRead
     ) {
-      // hideNotifications();
+      setIsNotificationsOpen(true);
     }
   };
 
@@ -61,7 +63,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 
   useEffect(() => {
     console.log("Setting up update monitoring for chatType field");
-  
+
     const channel: RealtimeChannel = supabase
       .channel("chat-type-updates")
       .on(
@@ -76,9 +78,12 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
           console.log("Chat updated to CHAT_LAWYER:", payload);
           console.log("Updated chat data:", payload.new);
           console.log("Previous chat data:", payload.old);
-          
+
           // Optional: Check if this was actually a change from something else to CHAT_LAWYER
-          if (payload.old.chatType !== "CHAT_LAWYER" && payload.new.chatType === "CHAT_LAWYER") {
+          if (
+            payload.old.chatType !== "CHAT_LAWYER" &&
+            payload.new.chatType === "CHAT_LAWYER"
+          ) {
             console.log("Chat was converted to lawyer chat!");
             // Handle notification or state update here
             // setNotificationsData((previous: any) => [
@@ -90,31 +95,31 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
       )
       .subscribe((status) => {
         console.log("Subscription status:", status);
-        
-        if (status === 'SUBSCRIBED') {
+
+        if (status === "SUBSCRIBED") {
           console.log("Successfully subscribed to chatType updates");
         }
-        
-        if (status === 'CHANNEL_ERROR') {
+
+        if (status === "CHANNEL_ERROR") {
           console.error("Failed to subscribe to chatType updates");
         }
       });
-      
+
     console.log("Channel status:", channel.state);
-      
+
     return () => {
       console.log("Cleaning up subscription");
       channel.unsubscribe();
     };
   }, []);
-    
-    // if (lastNotificationCounter < 0) {
-    //     setLastNotificationCounter(notificationsData?.totalUnread);
-    // } else {
-    //     if (lastNotificationCounter !== notificationsData?.totalUnread){
-    //         setLastNotificationCounter(notificationsData?.totalUnread);
-    //     }
-    // }
+
+  // if (lastNotificationCounter < 0) {
+  //     setLastNotificationCounter(notificationsData?.totalUnread);
+  // } else {
+  //     if (lastNotificationCounter !== notificationsData?.totalUnread){
+  //         setLastNotificationCounter(notificationsData?.totalUnread);
+  //     }
+  // }
   return (
     <>
       <header
@@ -134,11 +139,14 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
         <div className="flex items-center space-x-4">
           <Tooltip title="Notifications">
             <button className="relative" onClick={handleNotifications}>
-              {typeof notificationBadgeCounter === 'number' && notificationBadgeCounter > 0 && (
-                <p className="w-4 h-4 text-xs text-neutrals-white bg-statesRed-red rounded-xl text-center absolute bottom-4 left-3">
-                  {notificationBadgeCounter < 9 ? notificationBadgeCounter : 9}
-                </p>
-              )}
+              {typeof notificationBadgeCounter === "number" &&
+                notificationBadgeCounter > 0 && (
+                  <p className="w-4 h-4 text-xs text-neutrals-white bg-statesRed-red rounded-xl text-center absolute bottom-4 left-3">
+                    {notificationBadgeCounter < 9
+                      ? notificationBadgeCounter
+                      : 9}
+                  </p>
+                )}
               <img
                 src={NotificationIcon}
                 alt="Notifications"
@@ -300,6 +308,12 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
           </button>
         </div>
       )}
+      <NotificationSlideover
+        open={isNotificationsOpen}
+        setOpen={setIsNotificationsOpen}
+        markAllNotificationsAsRead={markAllNotificationsAsRead}
+        notificationsData={notificationsData}
+      />
     </>
   );
 };

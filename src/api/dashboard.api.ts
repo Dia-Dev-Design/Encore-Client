@@ -7,6 +7,8 @@ import { MetricParams } from "interfaces/dashboard/metrics/metricParams.interfac
 import { Metric } from "interfaces/dashboard/metrics/metric.interface";
 import { ClientDataReceived } from "interfaces/dashboard/clientDataReceived.interface";
 import { AdminNotificationParams } from "interfaces/dashboard/adminNotifications.interface";
+import { AxiosResponse } from "axios";
+import { NotificationApiResponse } from "interfaces/notifications/notification.interface";
 
 export function getClients(key: string, params: Params) {
   return useQuery({
@@ -102,7 +104,7 @@ export function getAdminNotifications(key: string, params: AdminNotificationPara
   return useQuery({
     queryKey: [key],
     queryFn: async ({ signal }) => {
-      const response = await apiClient.get('/api/notifications/admin-list', { signal, params });
+      const response: AxiosResponse<NotificationApiResponse> = await apiClient.get('/api/notifications/admin-list', { signal, params });
       return unwrapAxiosResponse(response);
     }
   });

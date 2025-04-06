@@ -13,12 +13,16 @@ import {
   getAdminUser,
   hideAdminNotifications,
 } from "api/dashboard.api";
+
 import { ViewProps } from "interfaces/dashboard/viewProps.interface";
 import { useQueryParams } from "helper/query.helper";
 import { AdminNotificationParams } from "interfaces/dashboard/adminNotifications.interface";
 import { useNavigate } from "react-router-dom";
 import { appRoute } from "consts/routes.const";
-import { createClient, SupabaseClient, RealtimeChannel } from '@supabase/supabase-js'
+import { useAuth } from "context/auth.context";
+import notificationService from "services/NotificationService";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSupabase } from "context/supabase.contest";
 
 interface TableRecord {
     id: number;
@@ -30,83 +34,78 @@ const DashboardView: React.FC<ViewProps> = ({
   isSideBarCollapsed,
   setIsSideBarCollapsed,
 }) => {
+  const supabase = useSupabase();
   const navigate = useNavigate();
-
-  
-  
-  
-  // const [params, setParams] = useQueryParams<AdminNotificationParams>({
-    //     limit: 50, page: 1, category: null
-    // });
-    const { data: userData, isLoading: userDataLoading } = getAdminUser();
-    //   const { data: notificationsData, isLoading: notificationDataLoading } = getAdminNotifications(ADMIN_NOTiFICATIONS, params);
-    
-    const [notificationsData, setNotificationsData] = useState(Array)
-    
-    const [lastNotificationCounter, setLastNotificationCounter] =
+  const { user } = useAuth();
+  const [params, setParams] = useQueryParams<AdminNotificationParams>({
+    limit: 50,
+    page: 1,
+    category: null,
+    userId: user?.user.id || "",
+  });
+  const { data: userData, isLoading: userDataLoading } = getAdminUser();
+  const { data: notificationsData, isLoading: notificationDataLoading } =
+    getAdminNotifications(ADMIN_NOTiFICATIONS, {
+      limit: params.limit,
+      page: params.page,
+      category: params.category,
+      userId: params.userId,
+    });
+  const [lastNotificationCounter, setLastNotificationCounter] =
     useState<number>(-1);
-    const { mutate, isPending } = hideAdminNotifications();
-    
-  //   useEffect(() => {
+  const { mutate, isPending } = hideAdminNotifications();
+  const queryClient = useQueryClient();
 
-        
-  //   console.log("Here we are hitting the UseEffect!!!!")
+  useEffect(() => {
+    if (lastNotificationCounter < 0) {
+      setLastNotificationCounter(notificationsData?.totalUnread);
+    } else {
+      if (lastNotificationCounter !== notificationsData?.totalUnread) {
+        setLastNotificationCounter(notificationsData?.totalUnread);
+      }
+    }
+  }, [notificationsData]);
 
-  //   const supabase: SupabaseClient = createClient(supabaseUrl, supabaseKey);
+  useEffect(() => {
+    notificationService.init(user?.user.id || "", supabase);
+    const { limit, page, category, userId } = params;
+    notificationService.onNotification(() => {
+      console.log("Notification received");
+      // Invalidate the query to refresh notifications data
+      queryClient.invalidateQueries({ queryKey: [ADMIN_NOTiFICATIONS] });
+    });
 
-  //   const channel: RealtimeChannel = supabase
-  //     .channel("inserts-only")
-  //     .on(
-  //       "postgres_changes",
-  //       {
-  //         event: "INSERT",
-  //         schema: "public",
-  //         table: "ChatThread",
-  //         filter: 'chatType=eq.CHAT_LAWYER',
-  //       },
-  //       (payload) => {
-  //         console.log("New record inserted:", payload);
-  //         setNotificationsData((previous: any) => [...previous, payload.new as TableRecord])
-  //       }
-  //     )
-  //     .subscribe();
-  //   // if (lastNotificationCounter < 0) {
-  //   //     setLastNotificationCounter(notificationsData?.totalUnread);
-  //   // } else {
-  //   //     if (lastNotificationCounter !== notificationsData?.totalUnread){
-  //   //         setLastNotificationCounter(notificationsData?.totalUnread);
-  //   //     }
-  //   // }
-  //   return () => {
-  //       channel.unsubscribe()
-  //     }
-  // }, []);
+    return () => {
+      notificationService.removeListeners(); // Optional if unmounting
+    };
+  }, [user?.user.id]);
 
-//   const hideAllNotifications = async () => {
-//     if (notificationsData && notificationsData.list) {
-//       try {
-//         await Promise.all(
-//           notificationsData.list
-//             .filter((notification: any) => !notification.isRead)
-//             .map((notification: any) => {
-//               mutate(notification.id, {
-//                 onSuccess: (data) => {
-//                   console.log("Endpoint result:", data);
-//                 },
-//                 onError: (error, payload) => {
-//                   console.error("Error:", error, payload);
-//                 },
-//               });
-//             })
-//         );
+  const hideAllNotifications = async () => {
+    console.log("Hiding all notifications");
+    if (notificationsData && notificationsData.list) {
+      try {
+        await Promise.all(
+          notificationsData.list
+            .filter((notification: any) => !notification.isRead)
+            .map((notification: any) => {
+              mutate(notification.id, {
+                onSuccess: (data) => {
+                  console.log("Endpoint result:", data);
+                },
+                onError: (error, payload) => {
+                  console.error("Error:", error, payload);
+                },
+              });
+            })
+        );
 
-//         setLastNotificationCounter(-1);
-//         navigate(appRoute.admin.clients);
-//       } catch (error) {
-//         console.error("Error hiding notifications:", error);
-//       }
-//     }
-//   };
+        setLastNotificationCounter(-1);
+        navigate(appRoute.admin.clients);
+      } catch (error) {
+        console.error("Error hiding notifications:", error);
+      }
+    }
+  };
 
   return (
     <AdminLayout
@@ -117,7 +116,7 @@ const DashboardView: React.FC<ViewProps> = ({
       isSideBarCollapsed={isSideBarCollapsed}
       setIsSideBarCollapsed={setIsSideBarCollapsed}
       notificationBadgeCounter={lastNotificationCounter}
-    //   hideNotifications={hideAllNotifications}
+      hideNotifications={hideAllNotifications}
     >
       <Metrics />
       <ActionableTasks />

@@ -98,6 +98,7 @@ export function getDissolutionTasks(id: string) {
 }
 
 export function getAdminNotifications(key: string, params: AdminNotificationParams) {
+  console.log("getAdminNotifications", params);
   return useQuery({
     queryKey: [key],
     queryFn: async ({ signal }) => {

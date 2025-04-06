@@ -119,7 +119,7 @@ const CompanyStatus: React.FC<CompanyStatusProps> = ({ companyStatusData, setCom
     return (
         <S.Form>
             <S.FormGroup>
-                <S.BoldLabel>Could you please indicate your current stage in the process?</S.BoldLabel>
+                <S.BoldLabel>What brings you to encore today?</S.BoldLabel>
                 <S.VerticalRadioGroupContainer>
                     {currentStageOptions.map((option, index) => (
                         <S.RadioOption key={index}>

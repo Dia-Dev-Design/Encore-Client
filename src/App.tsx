@@ -31,6 +31,10 @@ import { DocHubView } from "pages/UserDashboard/DocHubView";
 import { AdminDocHubView } from "pages/AdminDashboard/DocHubAdmin";
 import { AuthProvider, useAuth } from "./context/auth.context";
 
+import { SupabaseProvider } from "context/supabase.contest";
+import { RedirectProvider } from "context/redirect.context";
+
+
 const RedirectIfLoggedIn: React.FC<{
   children: JSX.Element;
 }> = ({ children }) => {
@@ -94,11 +98,7 @@ const AppRoutes: React.FC = () => {
       />
       <Route
         path={appRoute.clients.registered}
-        element={
-          <RedirectIfLoggedIn>
-            <RegisterCompleted />
-          </RedirectIfLoggedIn>
-        }
+        element={<RegisterCompleted />}
       />
       <Route
         path={appRoute.clients.authRedirection}
@@ -226,7 +226,11 @@ const App: React.FC = () => {
   return (
     <Router>
       <AuthProvider>
-        <AppRoutes />
+        <RedirectProvider>
+          <SupabaseProvider>
+            <AppRoutes />
+          </SupabaseProvider>
+        </RedirectProvider>
       </AuthProvider>
     </Router>
   );

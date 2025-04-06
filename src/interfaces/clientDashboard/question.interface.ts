@@ -7,4 +7,5 @@ export interface QuestionWithFile {
     thread_id: string;
     prompt: string;
     fileId: string | null;
+    forLawyer: boolean
 }

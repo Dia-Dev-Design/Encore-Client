@@ -22,6 +22,7 @@ interface ChatWindowProps {
     setSelectedChatType: (type: ChatSpaceType) => void;
     chatbotThread: ChatbotThread | undefined;
     chatbotThreadType: ChatTypeEnum | undefined;
+    selectedChatId: string;
     setChatbotThread: (chat: ChatbotThread) => void;
     invalidateMainQueries: () => void;
 };
@@ -38,7 +39,9 @@ const ChatWindow: React.FC<ChatWindowProps> =({
     const [questionSentence, setQuestionSentence] = useState<string>("");
     
     // Correctly set isLawyer based on user data
-    const isLawyer = userData?.isLawyer === true;
+    const isLawyer = userData?.user.isLawyer === true;
+
+    console.log("Do we have a lawyer", isLawyer)
     
     // Update SSE connection with correct user role
     const { data, error } = adminSSE(userData?.id, chatbotThread?.id, isLawyer);
@@ -73,6 +76,7 @@ const ChatWindow: React.FC<ChatWindowProps> =({
                 checkpoint_id: dataReceived.message.id,
                 content: dataReceived.message.content,
                 role: dataReceived.message.user.typeUser === "USER_COMPANY" ? "user" : "lawyer",
+                forLawyer: isLawyer
             };
             setHistoryConversation([...historyConversation, newAnswer]);
         } catch (error) {
@@ -93,9 +97,9 @@ const ChatWindow: React.FC<ChatWindowProps> =({
     }, [chatbotThread?.id]);
 
     const handleSend = (question: string) => {
-        setQuestionSentence("");
         setSelectedChatType(ChatSpaceType.chatSpace);
         handleAnswer(question);
+        setQuestionSentence("");
     }
 
     const handleAnswer = (answer: string, fetchedThread?: string) => {
@@ -111,11 +115,14 @@ const ChatWindow: React.FC<ChatWindowProps> =({
             
             // Determine if we're sending as a lawyer or regular user
             const userType = isLawyer ? "lawyer" : (userData?.userType === 'Admin' ? "admin" : "user");
+
+            const forWhom = userType === 'user'
             
             const payload = {
                 threadId: chatbotThreadId,
                 message: answer,
-                userType: userType
+                userType: userType,
+                forLawyer: forWhom
             };
             
             console.log(`Sending answer with payload as ${userType}:`, payload);
@@ -142,6 +149,7 @@ const ChatWindow: React.FC<ChatWindowProps> =({
                         checkpoint_id: `error-${Date.now()}`,
                         content: answer,
                         role: "lawyer",
+                        forLawyer: forWhom
                     };
                     setHistoryConversation([...historyConversation, newLawyerMessage]);
                 },

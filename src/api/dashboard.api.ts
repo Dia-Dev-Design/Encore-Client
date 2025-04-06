@@ -8,7 +8,6 @@ import { Metric } from "interfaces/dashboard/metrics/metric.interface";
 import { ClientDataReceived } from "interfaces/dashboard/clientDataReceived.interface";
 import { AdminNotificationParams } from "interfaces/dashboard/adminNotifications.interface";
 
-
 export function getClients(key: string, params: Params) {
   return useQuery({
     queryKey: [key, params],
@@ -17,6 +16,20 @@ export function getClients(key: string, params: Params) {
         .get(`/api/companies`, {
           signal,
           params,
+        })
+        .then(unwrapAxiosResponse),
+  });
+}
+
+export function getNonActivatedUsers(key: string, params: Params) {
+  const { limit = 10, page = 1 } = params;
+  
+  return useQuery({
+    queryKey: [key, { limit, page }],
+    queryFn: ({ signal }) =>
+      apiClient
+        .get(`/api/user/admin/non-activated?limit=${limit}&page=${page}`, {
+          signal,
         })
         .then(unwrapAxiosResponse),
   });

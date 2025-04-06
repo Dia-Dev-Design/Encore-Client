@@ -36,6 +36,31 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
   const [bugSubject, setBugSubject] = useState("");
   const [bugMessage, setBugMessage] = useState("");
   const [bugSubmitted, setBugSubmitted] = useState(false);
+
+  const [isFeatureModalOpen, setIsFeatureModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+
+  const [featureSubject, setFeatureSubject] = useState("");
+  const [featureMessage, setFeatureMessage] = useState("");
+  const [featureSubmitted, setFeatureSubmitted] = useState(false);
+
+  const [feedbackSubject, setFeedbackSubject] = useState("");
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+
+  const [senderName, setSenderName] = useState("");
+  const [senderEmail, setSenderEmail] = useState("");
+
+  useEffect(() => {
+    if (isBugModalOpen || isFeatureModalOpen || isFeedbackModalOpen) {
+      const contextName = isUser === HeaderTitle.Admin ? user?.user?.name : user?.name;
+      const contextEmail = isUser === HeaderTitle.Admin ? user?.user?.email : user?.email;
+
+      setSenderName(contextName || "");
+      setSenderEmail(contextEmail || "");
+    }
+  }, [isBugModalOpen, isFeatureModalOpen, isFeedbackModalOpen]);
+
   const { logOutUser } = useAuth();
   const supabase = useSupabase();
 
@@ -69,17 +94,11 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
     e.preventDefault();
 
     try {
-      console.log("report a bug request: ", {
-        name: isUser === HeaderTitle.Admin ? user?.user?.name : user.name,
-        subject: bugSubject,
-        message: bugMessage,
-        email: isUser === HeaderTitle.Admin ? user?.user?.email : user.email,
-      })
       await apiClient.post('/api/email/bug-report', {
-        name: isUser === HeaderTitle.Admin ? user?.user?.name : user.name,
+        name: senderName,
         subject: bugSubject,
         message: bugMessage,
-        email: isUser === HeaderTitle.Admin ? user?.user?.email : user.email,
+        email: senderEmail,
       });
 
       setBugSubmitted(true);
@@ -97,9 +116,54 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 
   };
 
+  const handleFeatureSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await apiClient.post("/api/email/feature-request", {
+        name: senderName,
+        email: senderEmail,
+        subject: featureSubject,
+        message: featureMessage,
+      });
+      setFeatureSubmitted(true);
+      setFeatureSubject("");
+      setFeatureMessage("");
+      setTimeout(() => {
+        setFeatureSubmitted(false);
+        setIsFeatureModalOpen(false);
+      }, 1500);
+    } catch (error) {
+      alert("Error sending feature request.");
+      console.error(error);
+    }
+  };
+
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await apiClient.post("/api/email/feedback", {
+        name: senderName,
+        email: senderEmail,
+        subject: feedbackSubject,
+        message: feedbackMessage,
+      });
+      setFeedbackSubmitted(true);
+      setFeedbackSubject("");
+      setFeedbackMessage("");
+      setTimeout(() => {
+        setFeedbackSubmitted(false);
+        setIsFeedbackModalOpen(false);
+      }, 1500);
+    } catch (error) {
+      alert("Error sending feedback.");
+      console.error(error);
+    }
+  };
+
+
   // useEffect(() => {
   //   console.log("Setting up update monitoring for chatType field");
-  
+
   //   const channel: RealtimeChannel = supabase
   //     .channel("chat-type-updates")
   //     .on(
@@ -114,7 +178,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
   //         console.log("Chat updated to CHAT_LAWYER:", payload);
   //         console.log("Updated chat data:", payload.new);
   //         console.log("Previous chat data:", payload.old);
-          
+
   //         // Optional: Check if this was actually a change from something else to CHAT_LAWYER
   //         if (payload.old.chatType !== "CHAT_LAWYER" && payload.new.chatType === "CHAT_LAWYER") {
   //           console.log("Chat was converted to lawyer chat!");
@@ -128,31 +192,31 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
   //     )
   //     .subscribe((status) => {
   //       console.log("Subscription status:", status);
-        
+
   //       if (status === 'SUBSCRIBED') {
   //         console.log("Successfully subscribed to chatType updates");
   //       }
-        
+
   //       if (status === 'CHANNEL_ERROR') {
   //         console.error("Failed to subscribe to chatType updates");
   //       }
   //     });
-      
+
   //   console.log("Channel status:", channel.state);
-      
+
   //   return () => {
   //     console.log("Cleaning up subscription");
   //     channel.unsubscribe();
   //   };
   // }, []);
-    
-    // if (lastNotificationCounter < 0) {
-    //     setLastNotificationCounter(notificationsData?.totalUnread);
-    // } else {
-    //     if (lastNotificationCounter !== notificationsData?.totalUnread){
-    //         setLastNotificationCounter(notificationsData?.totalUnread);
-    //     }
-    // }
+
+  // if (lastNotificationCounter < 0) {
+  //     setLastNotificationCounter(notificationsData?.totalUnread);
+  // } else {
+  //     if (lastNotificationCounter !== notificationsData?.totalUnread){
+  //         setLastNotificationCounter(notificationsData?.totalUnread);
+  //     }
+  // }
   return (
     <>
       <header
@@ -245,6 +309,20 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
             >
               Report a Bug
             </button>
+            <button
+              className="w-full py-2 px-4 text-left text-primaryLinkWater-950"
+              onClick={() => setIsFeatureModalOpen(true)}
+            >
+              Request a Feature
+            </button>
+
+            <button
+              className="w-full py-2 px-4 text-left text-primaryLinkWater-950"
+              onClick={() => setIsFeedbackModalOpen(true)}
+            >
+              Leave Feedback
+            </button>
+
             <button
               className="w-full py-2 px-4 text-left text-[#E23939]"
               onClick={handleLogout}
@@ -343,7 +421,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
           <div className="bg-gray-100 border border-gray-300 rounded-lg shadow-lg w-full max-w-xl mx-4 md:mx-0">
             <div className="py-4 px-6 border-b border-gray-300 flex justify-between items-center">
               <h2 className="font-figtree text-2xl text-primaryMariner-900 font-medium">
-               Report a bug
+                Report a Bug
               </h2>
               <button
                 type="button"
@@ -363,6 +441,28 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
               ) : (
                 <form onSubmit={handleBugSubmit} className="space-y-4">
                   <div>
+                    <label className="block text-sm font-medium text-gray-700">Name</label>
+                    <input
+                      type="text"
+                      value={senderName}
+                      onChange={(e) => setSenderName(e.target.value)}
+                      required
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primaryMariner-900 focus:ring-primaryMariner-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      type="email"
+                      value={senderEmail}
+                      onChange={(e) => setSenderEmail(e.target.value)}
+                      required
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primaryMariner-900 focus:ring-primaryMariner-900"
+                    />
+                  </div>
+
+                  <div>
                     <label
                       htmlFor="subject"
                       className="block text-sm font-medium text-gray-700"
@@ -379,7 +479,6 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
                       className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primaryMariner-900 focus:ring-primaryMariner-900"
                     />
                   </div>
-
                   <div>
                     <label
                       htmlFor="message"
@@ -410,7 +509,174 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
           </div>
         </div>
       )}
+      {isFeatureModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-gray-100 border border-gray-300 rounded-lg shadow-lg w-full max-w-xl mx-4 md:mx-0">
+            <div className="py-4 px-6 border-b border-gray-300 flex justify-between items-center">
+              <h2 className="font-figtree text-2xl text-primaryMariner-900 font-medium">
+                Request a Feature
+              </h2>
+              <button onClick={() => setIsFeatureModalOpen(false)} className="hover:opacity-70">
+                <img src={BlackXImage} alt="Close" />
+              </button>
+            </div>
+            <div className="py-4 px-6">
+              {featureSubmitted ? (
+                <div className="text-center py-8">
+                  <h3 className="text-xl font-semibold">Thank you for your suggestion!</h3>
+                  <p className="text-gray-600">We appreciate your input.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleFeatureSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Name</label>
+                    <input
+                      type="text"
+                      value={senderName}
+                      onChange={(e) => setSenderName(e.target.value)}
+                      required
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primaryMariner-900 focus:ring-primaryMariner-900"
+                    />
+                  </div>
 
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      type="email"
+                      value={senderEmail}
+                      onChange={(e) => setSenderEmail(e.target.value)}
+                      required
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primaryMariner-900 focus:ring-primaryMariner-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Subject
+                    </label>
+                    <input
+                      value={featureSubject}
+                      onChange={(e) => setFeatureSubject(e.target.value)}
+                      type="text"
+                      required
+                      className="block w-full rounded-md border border-gray-300 p-2"
+                    />
+                  </div>
+                  <textarea
+                    value={featureMessage}
+                    onChange={(e) => setFeatureMessage(e.target.value)}
+                    placeholder="Describe the feature"
+                    rows={6}
+                    required
+                    className="block w-full rounded-md border border-gray-300 p-2"
+                  />
+                  <button
+                    type="submit"
+                    className="w-full py-2 px-4 text-white font-semibold bg-primaryViking-800 rounded-md hover:bg-primaryMariner-900"
+                  >
+                    Submit
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {isFeedbackModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-gray-100 border border-gray-300 rounded-lg shadow-lg w-full max-w-xl mx-4 md:mx-0">
+            <div className="py-4 px-6 border-b border-gray-300 flex justify-between items-center">
+              <h2 className="font-figtree text-2xl text-primaryMariner-900 font-medium">
+                Leave Feedback
+              </h2>
+              <button
+                type="button"
+                onClick={() => setIsFeedbackModalOpen(false)}
+                className="hover:opacity-70"
+              >
+                <img src={BlackXImage} alt="Close" />
+              </button>
+            </div>
+
+            <div className="py-4 px-6">
+              {feedbackSubmitted ? (
+                <div className="text-center py-8">
+                  <h3 className="text-xl font-semibold">Thanks for your feedback!</h3>
+                  <p className="text-gray-600">We value your opinion and will use it to improve.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Name</label>
+                    <input
+                      type="text"
+                      value={senderName}
+                      onChange={(e) => setSenderName(e.target.value)}
+                      required
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primaryMariner-900 focus:ring-primaryMariner-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      type="email"
+                      value={senderEmail}
+                      onChange={(e) => setSenderEmail(e.target.value)}
+                      required
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primaryMariner-900 focus:ring-primaryMariner-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Subject
+                    </label>
+                    <input
+                      value={feedbackSubject}
+                      onChange={(e) => setFeedbackSubject(e.target.value)}
+                      type="text"
+                      id="feedback-subject"
+                      name="subject"
+                      required
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primaryMariner-900 focus:ring-primaryMariner-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="feedback-message"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Message
+                    </label>
+                    <textarea
+                      id="feedback-message"
+                      name="message"
+                      value={feedbackMessage}
+                      onChange={(e) => setFeedbackMessage(e.target.value)}
+                      rows={8}
+                      required
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primaryMariner-900 focus:ring-primaryMariner-900"
+                    ></textarea>
+                  </div>
+
+                  <button
+                    className="w-full py-2 px-4 text-white font-semibold bg-primaryViking-800 rounded-md hover:bg-primaryMariner-900 transition-colors"
+                    type="submit"
+                  >
+                    Submit
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

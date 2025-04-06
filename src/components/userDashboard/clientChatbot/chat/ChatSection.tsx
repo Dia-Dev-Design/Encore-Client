@@ -4,7 +4,7 @@ import {
   askQuestionWithFile,
   getChatbotThread,
   getChatHistory,
-  requestALawyer,
+  useRequestALawyer,
   uploadFile,
   useStreamQuestion,
   createCategory,
@@ -90,8 +90,14 @@ const ChatSection: React.FC<ChatSectionProps> = ({
   const { mutate: sendQuestionWithFile, isPending: isSendingQuestionWithFile } =
     askQuestionWithFile();
   const { mutate: uploadFileToChat, isPending: isUploadingFile } = uploadFile();
-  const { mutate: requestLawyer, isPending: requestLawyerLoading } =
-    requestALawyer();
+  const { mutate: requestALawyerMutate, isPending: requestLawyerLoading } = useRequestALawyer({
+    onSuccess: () => {
+      // Handle success
+    },
+    onError: (error) => {
+      // Handle error
+    }
+  });
   const { mutate: streamQuestionMutation, isPending: isStreamingQuestion } =
     useStreamQuestion();
 
@@ -292,7 +298,7 @@ const sendQuestionForLawyer = (question: string, chatThreadId: string, fileId?: 
 
           setTimeout(() => {
             setIsStreaming(false);
-            placeholderIdRef.current = null;
+            placeholderIdRef.current = null;requestALawyerMutate({ threadId: 'your-thread-id' })
           }, 100);
 
           return updatedHistory;
@@ -307,8 +313,8 @@ const sendQuestionForLawyer = (question: string, chatThreadId: string, fileId?: 
       const payload = {
         threadId: chatbotThreadId,
       };
-
-      requestLawyer(payload, {
+  
+      requestALawyerMutate(payload, {
         onSuccess: () => {
           // Add user message
           addNewUserMessage(question);
@@ -514,82 +520,82 @@ const sendQuestionForLawyer = (question: string, chatThreadId: string, fileId?: 
     // Subscribe to both ChatLawyerMessage and any other relevant tables
     const channel = supabase
       .channel(channelName)
-      .on(
-        "postgres_changes",
-        {
-          event: "*", // Listen for all events (INSERT, UPDATE, DELETE)
-          schema: "public",
-          table: "ChatLawyerMessage",
-          filter: `ChatThreadId=eq.${chatId}`,
-        },
-        (payload: { new: any; old: any; eventType: string }) => {
-          console.log("Chat lawyer message event:", payload);
+      // .on(
+      //   "postgres_changes",
+      //   {
+      //     event: "*", // Listen for all events (INSERT, UPDATE, DELETE)
+      //     schema: "public",
+      //     table: "ChatLawyerMessage",
+      //     filter: `ChatThreadId=eq.${chatId}`,
+      //   },
+      //   (payload: { new: any; old: any; eventType: string }) => {
+      //     console.log("Chat lawyer message event:", payload);
           
-          // Only process INSERT events for new messages
-          if (payload.eventType !== "INSERT" || !payload.new) return;
+      //     // Only process INSERT events for new messages
+      //     if (payload.eventType !== "INSERT" || !payload.new) return;
         
-          if (payload.new && (payload.new.role === "lawyer" || payload.new.user_type === "lawyer")) {
-            console.log("Received lawyer message:", payload.new);
+      //     if (payload.new && (payload.new.role === "lawyer" || payload.new.user_type === "lawyer")) {
+      //       console.log("Received lawyer message:", payload.new);
             
-            // Create a proper HistoryNode from the payload
-            const newLawyerMessage: HistoryNode = {
-              checkpoint_id: payload.new.id || `lawyer-${Date.now()}`,
-              content: payload.new.content || payload.new.message || "",
-              role: "lawyer",
-              forLawyer: false,
-              isStreaming: false,
-              isError: false
-            };
+      //       // Create a proper HistoryNode from the payload
+      //       const newLawyerMessage: HistoryNode = {
+      //         checkpoint_id: payload.new.id || `lawyer-${Date.now()}`,
+      //         content: payload.new.content || payload.new.message || "",
+      //         role: "lawyer",
+      //         forLawyer: false,
+      //         isStreaming: false,
+      //         isError: false
+      //       };
         
-            // Update the conversation with the new message
-            setLocalHistoryConversation(prev => [...prev, newLawyerMessage]);
-            setHistoryConversation([...historyConversation, newLawyerMessage]);
+      //       // Update the conversation with the new message
+      //       setLocalHistoryConversation(prev => [...prev, newLawyerMessage]);
+      //       setHistoryConversation([...historyConversation, newLawyerMessage]);
             
-            // Check if we need to show a system message about lawyer joining
-            const hasLawyerAlready = localHistoryConversation.some(
-              node => node.role === "lawyer"
-            );
+      //       // Check if we need to show a system message about lawyer joining
+      //       const hasLawyerAlready = localHistoryConversation.some(
+      //         node => node.role === "lawyer"
+      //       );
             
-            const hasSystemMessage = localHistoryConversation.some(
-              node => node.role === "system" && 
-                    (node.content.includes("lawyer has joined") || 
-                     node.content.includes("transferred to a lawyer"))
-            );
+      //       const hasSystemMessage = localHistoryConversation.some(
+      //         node => node.role === "system" && 
+      //               (node.content.includes("lawyer has joined") || 
+      //                node.content.includes("transferred to a lawyer"))
+      //       );
             
-            if (!hasLawyerAlready && !hasSystemMessage && 
-                chatbotThreadType !== ChatTypeEnum.ChatLawyer) {
-              // Add a system message indicating lawyer has joined
-              setTimeout(() => {
-                const systemMessage: HistoryNode = {
-                  checkpoint_id: `system-${Date.now() + 1}`,
-                  content: "A lawyer has joined the conversation. The AI assistant will no longer respond.",
-                  role: "system",
-                  forLawyer: false,
-                  isStreaming: false,
-                  isError: false,
-                };
+      //       if (!hasLawyerAlready && !hasSystemMessage && 
+      //           chatbotThreadType !== ChatTypeEnum.ChatLawyer) {
+      //         // Add a system message indicating lawyer has joined
+      //         setTimeout(() => {
+      //           const systemMessage: HistoryNode = {
+      //             checkpoint_id: `system-${Date.now() + 1}`,
+      //             content: "A lawyer has joined the conversation. The AI assistant will no longer respond.",
+      //             role: "system",
+      //             forLawyer: false,
+      //             isStreaming: false,
+      //             isError: false,
+      //           };
                 
-                setLocalHistoryConversation(prev => [...prev, systemMessage]);
-                setHistoryConversation([...historyConversation, systemMessage]);
-              }, 500);
-            }
-          }
-        }
-      )
+      //           setLocalHistoryConversation(prev => [...prev, systemMessage]);
+      //           setHistoryConversation([...historyConversation, systemMessage]);
+      //         }, 500);
+      //       }
+      //     }
+      //   }
+      // )
       // Also listen to any general chat message table if needed
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
-          table: "ChatMessage", // Add any other relevant table name
-          filter: `thread_id=eq.${chatId}`,
+          table: "ChatLawyerMessage", // Add any other relevant table name
+          filter: `ChatThreadId=eq.${chatId}`,
         },
         (payload: { new: any; old: any }) => {
           console.log("General chat message received:", payload);
           
           // Process general chat messages if needed
-          if (payload.new && payload.new.role === "lawyer") {
+          if (payload.new && payload.new.userMessageType === "admin") {
             const newMessage: HistoryNode = {
               checkpoint_id: payload.new.id || `msg-${Date.now()}`,
               content: payload.new.content || "",

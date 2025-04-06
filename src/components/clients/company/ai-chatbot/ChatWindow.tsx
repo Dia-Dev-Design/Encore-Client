@@ -97,9 +97,9 @@ const ChatWindow: React.FC<ChatWindowProps> =({
     }, [chatbotThread?.id]);
 
     const handleSend = (question: string) => {
-        setQuestionSentence("");
         setSelectedChatType(ChatSpaceType.chatSpace);
         handleAnswer(question);
+        setQuestionSentence("");
     }
 
     const handleAnswer = (answer: string, fetchedThread?: string) => {

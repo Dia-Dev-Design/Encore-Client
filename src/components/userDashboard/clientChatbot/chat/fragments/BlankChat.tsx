@@ -60,7 +60,7 @@ const BlankChat: React.FC<BlankChatProps> =({
                             onClick={handleAskForLawyer}
                             disabled={chatbotThreadType && chatbotThreadType === ChatTypeEnum.ChatLawyer}
                         >
-                            <img src={HandIcon} alt="" />
+                            <img src={HandIcon} alt="hand-icon" />
                         </button>
                     </Tooltip>
                     <AttachFileButton uploadedFile={uploadedFile} setUploadedFile={setUploadedFile} />

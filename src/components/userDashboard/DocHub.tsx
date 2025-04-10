@@ -289,7 +289,7 @@ const DocHub: React.FC = () => {
 
       {selectedDocument && (
         <PDFViewer
-          url={`http://localhost:8080/api/dochub/documents/${selectedDocument.id}/stream`}
+          url={`${process.env.REACT_APP_API_BASE_URL}/api/dochub/documents/${selectedDocument.id}/stream`}
           fileName={selectedDocument.name}
           visible={previewVisible}
           onClose={handleClosePreview}

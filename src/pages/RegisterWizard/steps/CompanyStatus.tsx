@@ -11,11 +11,11 @@ interface CompanyStatusProps {
 
 const CompanyStatus: React.FC<CompanyStatusProps> = ({ companyStatusData, setCompanyStatusData, companyStatusErrors }) => {
     const currentStageOptions = [
-        {"id":"RECENTLY_DECIDED_SHUTDOWN", "label":"Recently decided to shut down"},
-        {"id":"MIDDLE_OF_SHUTDOWN", "label":"Middle of the shutdown process"}, 
-        {"id":"PARTIAL_UNWIND", "label":"Content/Partial Unwind / Downsize"}, 
-        {"id":"DISTRESSED_SALE", "label":"Distressed Sale"}, 
-        {"id":"UNDECIDED", "label":"Haven’t decided yet"}, 
+        {"id":"GENERAL_LEGAL_SUPPORT", "label":"Looking for General Legal Support."},
+        {"id":"INTERESTED_TO_LEARN_ABOUT_TECH_SOLUTIONS", "label":"Interested in learning more about legal tech solutions for my business."}, 
+        {"id":"CONSIDERING_OR_IN_PROCESS_OF_DISSOLUTION", "label":"Considering or in the process of Dissolution."}, 
+        {"id":"SEEKING_LEGAL_ADVICE_AND_SUPPORT", "label":"Seeking legal advice and support"}, 
+        {"id":"REVIEW_AND_ANALYSIS_OF_LEGAL_DOCUMENTS", "label":"Review and analysis of legal documents"}, 
         {"id":"OTHER", "label":"Other"}, 
     ];
     const [selectedCurrentStageOption, setSelectedCurrentStageOption] = useState<string>("OTHER");

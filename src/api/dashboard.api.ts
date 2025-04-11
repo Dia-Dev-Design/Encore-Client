@@ -22,10 +22,11 @@ export function getClients(key: string, params: Params) {
 }
 
 export function getNonActivatedUsers(key: string, params: Params) {
-  const { limit = 10, page = 1 } = params;
+  // const { limit = 10, page = 1 } = params;
   
   return useQuery({
-    queryKey: [key, { limit, page }],
+    // queryKey: [key, { limit, page }],
+    queryKey: [key],
     queryFn: ({ signal }) =>
       apiClient
         // .get(`/api/user/admin/non-activated?limit=${limit}&page=${page}`, {

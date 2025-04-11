@@ -28,7 +28,10 @@ export function getNonActivatedUsers(key: string, params: Params) {
     queryKey: [key, { limit, page }],
     queryFn: ({ signal }) =>
       apiClient
-        .get(`/api/user/admin/non-activated?limit=${limit}&page=${page}`, {
+        // .get(`/api/user/admin/non-activated?limit=${limit}&page=${page}`, {
+        //   signal,
+        // })
+        .get('/api/user/admin/non-activated', {
           signal,
         })
         .then(unwrapAxiosResponse),

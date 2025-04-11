@@ -72,7 +72,7 @@ const AppRoutes: React.FC = () => {
         path={appRoute.clients.login}
         element={
           <RedirectIfLoggedIn>
-            <Login />
+            <Login adminLogin={false} />
           </RedirectIfLoggedIn>
         }
       />
@@ -88,7 +88,7 @@ const AppRoutes: React.FC = () => {
         path={appRoute.admin.login}
         element={
           <RedirectIfLoggedIn>
-            <AdminLogin />
+            <AdminLogin adminLogin={true} />
           </RedirectIfLoggedIn>
         }
       />

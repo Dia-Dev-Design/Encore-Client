@@ -27,7 +27,7 @@ const getApiUrl = (path: string) => {
 };
 
 interface LoginProps {
-  adminLogin?: boolean;
+  adminLogin: boolean;
 }
 
 const Login: React.FC<LoginProps> = ({ adminLogin }) => {

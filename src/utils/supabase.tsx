@@ -7,7 +7,7 @@ console.log("This is url", supabaseUrl)
 console.log("This is url", supabaseKey)
 
 // Create a single instance to be used throughout the app
-const supabase = createClient(
+export const supabase = createClient(
     supabaseUrl,
     supabaseKey,
     {

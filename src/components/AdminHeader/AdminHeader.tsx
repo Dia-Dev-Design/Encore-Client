@@ -324,7 +324,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
             </button>
 
             <button
-              className="w-full py-2 px-4 text-left text-primaryMariner"
+              className="w-full py-2 px-4 text-left text-primaryMariner-950"
               onClick={handleLogout}
             >
               Logout

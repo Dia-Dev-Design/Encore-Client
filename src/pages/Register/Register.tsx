@@ -35,7 +35,7 @@ const Register: React.FC = () => {
         clearInterval(interval);
         setChecking(false);
         localStorage.removeItem("token");
-        handleGoogleUser(JSON.parse(token).value);
+        // handleGoogleUser(JSON.parse(token).value);
       }
     }, 1000);
   }, [checking]);
@@ -88,50 +88,50 @@ const Register: React.FC = () => {
     }
   };
 
-  const handleGoogleUser = async (token: string) => {
-    try {
-      const response = await fetch(serverURL() + "/api/auth/refresh", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          Authorization: "Bearer " + token || "",
-        },
-      });
+  // const handleGoogleUser = async (token: string) => {
+  //   try {
+  //     const response = await fetch(serverURL() + "/api/auth/refresh", {
+  //       method: "GET",
+  //       headers: {
+  //         Accept: "application/json",
+  //         Authorization: "Bearer " + token || "",
+  //       },
+  //     });
 
-      if (response.ok) {
-        const data = await response.json();
-        setLocalItemWithExpiry("user", JSON.stringify(parseUser(data)), 2);
-        navigate(appRoute.clients.registerProcess);
-      } else {
-        const errorData = await response.json();
-        const errorMessage =
-          errorData.message || "Registration failed. Please try again.";
-        alert(errorMessage);
-        cleanlocalStorage();
-      }
-    } catch (error) {
-      console.error("Error during register:", error);
-    }
-  };
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       setLocalItemWithExpiry("user", JSON.stringify(parseUser(data)), 2);
+  //       navigate(appRoute.clients.registerProcess);
+  //     } else {
+  //       const errorData = await response.json();
+  //       const errorMessage =
+  //         errorData.message || "Registration failed. Please try again.";
+  //       alert(errorMessage);
+  //       cleanlocalStorage();
+  //     }
+  //   } catch (error) {
+  //     console.error("Error during register:", error);
+  //   }
+  // };
 
   const handleRedirectToLogin = () => {
     navigate(appRoute.clients.login);
   };
 
-  const handleRegisterWithGoogle = () => {
-    const popup = window.open(
-      serverURL() + "/api/auth/google",
-      "authPopup",
-      "width=500,height=600"
-    );
+  // const handleRegisterWithGoogle = () => {
+  //   const popup = window.open(
+  //     serverURL() + "/api/auth/google",
+  //     "authPopup",
+  //     "width=500,height=600"
+  //   );
 
-    if (!popup) {
-      alert("The popup was blocked by the browser.");
-      return;
-    }
+  //   if (!popup) {
+  //     alert("The popup was blocked by the browser.");
+  //     return;
+  //   }
 
-    setChecking(true);
-  };
+  //   setChecking(true);
+  // };
 
   return (
     <S.Container>
@@ -187,7 +187,7 @@ const Register: React.FC = () => {
                 </S.GoogleButton> */}
         <S.RegisterContainer>
           <S.Label>Already have an account?</S.Label>
-          <S.LabelButton onClick={handleRedirectToLogin}>Log In</S.LabelButton>
+          <S.LabelButton onClick={() => handleRedirectToLogin()}>Log In</S.LabelButton>
         </S.RegisterContainer>
         <S.RegisterContainer>
           <S.Label>By singing up, I agree to Encore’s</S.Label>

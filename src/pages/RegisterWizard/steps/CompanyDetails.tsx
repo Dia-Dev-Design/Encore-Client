@@ -23,7 +23,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({companyDetailsData, setC
     const companyDetailsStateRef = useRef<HTMLDivElement>(null);
     const companyDetailsCountryRef = useRef<HTMLDivElement>(null);
     
-    const [selectedStructureOption, setSelectedStructureOption] = useState<string>("CORPORATION");
+    const [selectedStructureOption, setSelectedStructureOption] = useState<string>("Corporation");
     const [otherStructureOption, setOtherStructureOption] = useState<string>("");
     const [selectedRaiseOption, setSelectedRaiseOption] = useState<string>("No");
     const [selectedEmployeeOption, setSelectedEmployeeOption] = useState<string>("No");

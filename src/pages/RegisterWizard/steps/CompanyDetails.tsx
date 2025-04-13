@@ -13,7 +13,7 @@ interface CompanyDetailsProps {
 
 const CompanyDetails: React.FC<CompanyDetailsProps> = ({companyDetailsData, setCompanyDetailsData, companyDetailsErrors }) => {
     const structureOptions = [
-        { label:"Corporation", value: "CORPORATION"},
+        { label:"Corporation", value: "Corporation"},
         { label:"LLC", value: "LLC"},
         { label:"Other", value: "Other"},
     ];
@@ -23,7 +23,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({companyDetailsData, setC
     const companyDetailsStateRef = useRef<HTMLDivElement>(null);
     const companyDetailsCountryRef = useRef<HTMLDivElement>(null);
     
-    const [selectedStructureOption, setSelectedStructureOption] = useState<string>("Other");
+    const [selectedStructureOption, setSelectedStructureOption] = useState<string>("CORPORATION");
     const [otherStructureOption, setOtherStructureOption] = useState<string>("");
     const [selectedRaiseOption, setSelectedRaiseOption] = useState<string>("No");
     const [selectedEmployeeOption, setSelectedEmployeeOption] = useState<string>("No");
@@ -56,6 +56,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({companyDetailsData, setC
         }
         setCompanyDetailsData({ ...companyDetailsData, hasRaisedCapital: selectedRaiseOption !== 'No'});
         setCompanyDetailsData({ ...companyDetailsData, hasW2Employees: selectedEmployeeOption !== 'No'});
+        setSelectedStructureOption
     }, []);
 
 
@@ -78,8 +79,8 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({companyDetailsData, setC
             }
             const dataReceived: CompanyDetailsData = await response.json();
             setCompanyDetailsData(dataReceived);
-            if (dataReceived.structure !== structureOptions[0].value && dataReceived.structure !== structureOptions[1].value){
-                setSelectedStructureOption(structureOptions[2].value);
+            if (dataReceived.structure !== structureOptions[2].value && dataReceived.structure !== structureOptions[1].value){
+                setSelectedStructureOption(structureOptions[1].value);
                 setOtherStructureOption(dataReceived.structure);
             } else {
                 setSelectedStructureOption(dataReceived.structure);

@@ -18,7 +18,7 @@ function RedirectProvider({ children }: { children: ReactNode }) {
       user &&
       !user.isAdmin &&
       !user.user.isActivated &&
-      user.user.registered
+      user.hasRegisteredCompanies
     ) {
       navigate("/registered");
     } else if (
@@ -26,7 +26,7 @@ function RedirectProvider({ children }: { children: ReactNode }) {
       user &&
       !user.isAdmin &&
       user.user.isActivated &&
-      user.user.registered
+      user.hasRegisteredCompanies
     ) {
       navigate("/home");
     }
@@ -34,7 +34,7 @@ function RedirectProvider({ children }: { children: ReactNode }) {
     user &&
       !user.isAdmin &&
       !user.user.isActivated &&
-      !user.user.registered
+      !user.hasRegisteredCompanies
     ) {
       navigate("/register-process");
     }

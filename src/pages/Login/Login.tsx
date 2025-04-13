@@ -89,7 +89,7 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
 
       if (response.ok) {
         const token = data.accessToken;
-        storeToken(token);
+        storeToken(token, false);
 
         setTimeout(() => {
           authenticateUser();
@@ -196,7 +196,7 @@ const Login: React.FC<LoginProps> = ({ adminLogin }) => {
         if (event.data && event.data.token) {
           const token = event.data.token;
 
-          storeToken(token);
+          storeToken(token, false);
 
           const connectionToken: Connection = {
             token: token,

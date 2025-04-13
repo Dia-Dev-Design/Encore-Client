@@ -56,7 +56,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({companyDetailsData, setC
         }
         setCompanyDetailsData({ ...companyDetailsData, hasRaisedCapital: selectedRaiseOption !== 'No'});
         setCompanyDetailsData({ ...companyDetailsData, hasW2Employees: selectedEmployeeOption !== 'No'});
-        setSelectedStructureOption
+        setSelectedStructureOption("Corporation")
     }, []);
 
 

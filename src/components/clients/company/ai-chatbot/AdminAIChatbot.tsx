@@ -51,19 +51,34 @@ const AdminAIChatbot = () => {
     getAdminChatHistory(CHAT_HISTORY, selectedChatId);
 
   useEffect(() => {
-    if (chatHistoryData && chatHistoryData.response && 
-        chatHistoryData.response.messages && 
-        chatHistoryData.response.messages.length > 0) {
-      console.log("ChatbotHistory=====>", chatHistoryData.response);
-      setSelectedChatType(ChatSpaceType.chatSpace);
-      setChatbotThreadType(chatHistoryData.response.chatType as ChatTypeEnum);
-      setHistoryConversation(chatHistoryData.response.messages);
-      
-      if (chatHistoryData.response.files) {
-        setFilesConversation(chatHistoryData.response.files);
+    if (chatHistoryData && chatHistoryData.response) {
+      if (
+        chatHistoryData.response.messages &&
+        Array.isArray(chatHistoryData.response.messages)
+      ) {
+        const cleanedMessages = chatHistoryData.response.messages.map(
+          (msg: HistoryNode, index: number) => {
+            const historyNode: HistoryNode = {
+              checkpoint_id:
+                msg.checkpoint_id || `history-${index}-${Date.now()}`,
+              content: msg.content || "",
+              role: msg.role,
+              fileId: msg.fileId || undefined,
+              url: msg.url || undefined,
+              isStreaming: false,
+              isError: false,
+              forLawyer: msg.forLawyer,
+            };
+
+            return historyNode;
+          }
+        );
+
+        setSelectedChatType(ChatSpaceType.chatSpace);
+        setHistoryConversation(cleanedMessages);
       }
     }
-  }, [chatHistoryData]);
+  }, [chatHistoryData, setHistoryConversation, setSelectedChatType]);
 
   const loadPreviousChat = (chat: ChatbotThread) => {
     console.log("Loading chat with ID:", chat.id);

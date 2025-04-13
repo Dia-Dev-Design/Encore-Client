@@ -110,7 +110,7 @@ const AdminAIChatbot = () => {
         (payload: { new: any; old: any }) => {
           console.log("Client message received:", payload);
           
-          if (payload.new) {
+          if (payload.new && payload.new.userMessageType === "USER_COMPANY") {
             const clientMessage: HistoryNode = {
               checkpoint_id: payload.new.id || `client-${Date.now()}`,
               content: payload.new.content || payload.new.message || "",

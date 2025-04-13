@@ -596,7 +596,8 @@ const sendQuestionForLawyer = (question: string, chatThreadId: string, fileId?: 
           console.log("General chat message received:", payload);
           
           // Process general chat messages if needed
-          if (payload.new && payload.new.userMessageType === "admin") {
+          // if (payload.new && payload.new.userMessageType === "admin") {
+          if (payload.new) {
             const newMessage: HistoryNode = {
               checkpoint_id: payload.new.id || `msg-${Date.now()}`,
               content: payload.new.content || "",

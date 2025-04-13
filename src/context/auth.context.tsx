@@ -19,7 +19,7 @@ interface BaseUser {
     id: string;
     isVerified: boolean;
     isActivated: boolean;
-    registered :boolean;
+    registered: boolean;
     lastPasswordChange: string | null;
     name: string;
     password: string;
@@ -45,8 +45,8 @@ interface AuthContextType {
   isLoading: boolean;
   isAdmin: boolean;
   user: User | null;
-  storeToken: (token: string) => void;
-  authenticateUser: () => void;
+  storeToken: (token: string, isAdmin: boolean) => void;
+  authenticateUser: () => Promise<void>;
   logOutUser: () => void;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   setIsAdmin: React.Dispatch<React.SetStateAction<boolean>>;
@@ -69,100 +69,138 @@ function AuthProvider({ children }: AuthProviderProps) {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   const navigate = useNavigate();
-  useEffect(() => {
-    if (user) {
-      console.log(user);
+
+  // Store token in localStorage
+  const storeToken = (token: string, isAdmin: boolean = false): void => {
+    try {
+      if (!token) {
+        console.error("Attempted to store empty token");
+        return;
+      }
+      
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("isAdmin", String(isAdmin));
+      console.log("Token stored successfully:", { token: token.substring(0, 10) + "...", isAdmin });
+    } catch (error) {
+      console.error("Error storing token:", error);
     }
-  }, [user]);
-
-  const storeToken = (token: string): void => {
-    localStorage.setItem("authToken", token);
   };
 
+  // Remove token from localStorage
   const removeToken = (): void => {
-    localStorage.clear();
+    try {
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("isAdmin");
+      console.log("Token removed successfully");
+    } catch (error) {
+      console.error("Error removing token:", error);
+    }
   };
 
+  // Logout user
   const logOutUser = (): void => {
     removeToken();
     setIsLoggedIn(false);
+    setIsAdmin(false);
     setUser(null);
     navigate("/login");
   };
 
-  const authenticateUser = (): void => {
-    const storedToken: any = localStorage.getItem("authToken");
-    const storedIsAdmin: any = localStorage.getItem("isAdmin");
-    const isAdminUser = storedIsAdmin === "true";
+  // Authenticate user
+  const authenticateUser = async (): Promise<void> => {
+    try {
+      const storedToken = localStorage.getItem("authToken");
+      const storedIsAdmin = localStorage.getItem("isAdmin");
+      
+      console.log("Debug - stored token:", storedToken ? storedToken.substring(0, 10) + "..." : null);
+      console.log("Debug - stored isAdmin:", storedIsAdmin);
+      
+      // If no token exists, user is not authenticated
+      if (!storedToken) {
+        console.log("No token found, user not authenticated");
+        setIsLoggedIn(false);
+        setIsLoading(false);
+        setUser(null);
+        return;
+      }
 
-    if (storedToken && !isAdminUser) {
-      get("api/auth/me")
-        .then((response) => {
-          const data = response.data;
-
-          const baseUser: RegularUser = {
-            accessToken: data.accessToken,
+      const isAdminUser = storedIsAdmin === "true";
+      
+      try {
+        // Choose appropriate endpoint based on user type
+        const endpoint = isAdminUser ? "api/auth/admin/me" : "api/auth/me";
+        console.log(`Attempting to authenticate with endpoint: ${endpoint}`);
+        
+        const response = await get(endpoint);
+        const data = response.data;
+        
+        if (isAdminUser) {
+          const adminUser: AdminUser = {
+            accessToken: data.accessToken || storedToken,
+            isAdmin: true,
+            user: data.user,
+          };
+          
+          setUser(adminUser);
+          setIsAdmin(true);
+          console.log("Admin user authenticated:", adminUser);
+        } else {
+          const regularUser: RegularUser = {
+            accessToken: data.accessToken || storedToken,
             isAdmin: data.isAdmin || false,
             user: data,
             hasRegisteredCompanies: data.hasRegisteredCompanies,
             companies: data.companies,
           };
-
-          setIsLoggedIn(true);
-          setIsLoading(false);
-          console.log("This is the baseUser", baseUser);
-          setUser(baseUser);
-        })
-        .catch((error) => {
+          
+          setUser(regularUser);
+          setIsAdmin(false);
+          console.log("Regular user authenticated:", regularUser);
+        }
+        
+        setIsLoggedIn(true);
+        
+        // Update token in storage if a new one was returned
+        if (data.accessToken && data.accessToken !== storedToken) {
+          storeToken(data.accessToken, isAdminUser);
+        }
+      } catch (error: any) {
+        console.error(`Authentication failed with ${isAdminUser ? 'admin' : 'regular'} endpoint:`, error);
+        
+        // If we get 401 Unauthorized, clear auth data
+        if (error.response && error.response.status === 401) {
           removeToken();
           setIsLoggedIn(false);
-          setIsLoading(false);
           setUser(null);
-          console.log(error);
-        });
-    } else if (storedToken && isAdminUser) {
-      get("api/auth/admin/me")
-        .then((response) => {
-          const data = response.data;
-
-          const baseUser: AdminUser = {
-            accessToken: data.accessToken,
-            isAdmin: true,
-            user: data.user,
-          };
-
-          setIsLoggedIn(true);
-          setIsLoading(false);
-          setUser(baseUser);
-        })
-        .catch((error) => {
-          removeToken();
-          setIsLoggedIn(false);
-          setIsLoading(false);
-          setUser(null);
-          console.log(error);
-        });
-    } else {
-      setIsLoggedIn(false);
+          setIsAdmin(false);
+        }
+      }
+    } catch (error) {
+      console.error("Error in authenticateUser:", error);
+    } finally {
       setIsLoading(false);
-      setUser(null);
-      removeToken();
     }
   };
 
+  // Initialize authentication on component mount
   useEffect(() => {
+    console.log("AuthProvider mounted, authenticating user...");
     authenticateUser();
-    const isAdmin = localStorage.getItem("isAdmin");
-    if (isAdmin === "true") {
-      setIsAdmin(true);
-    }
   }, []);
 
+  // Log user state changes
   useEffect(() => {
     if (user) {
-      console.log("this is our user", user);
+      console.log("User state updated:", {
+        id: user.user.id,
+        name: user.user.name,
+        isAdmin: user.isAdmin
+      });
+    } else {
+      console.log("User state cleared");
     }
   }, [user]);
+
   return (
     <AuthContext.Provider
       value={{

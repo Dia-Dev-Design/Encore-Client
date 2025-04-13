@@ -7,9 +7,7 @@ export const get = <T = any>(route: string): Promise<AxiosResponse<T>> => {
 
   return axios.get<T>(SERVER_URL + route, {
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache'
+      'Authorization': `Bearer ${token}`
     },
   });
 };

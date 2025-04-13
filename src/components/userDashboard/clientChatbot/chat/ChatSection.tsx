@@ -298,7 +298,8 @@ const sendQuestionForLawyer = (question: string, chatThreadId: string, fileId?: 
 
           setTimeout(() => {
             setIsStreaming(false);
-            placeholderIdRef.current = null;requestALawyerMutate({ threadId: 'your-thread-id' })
+            placeholderIdRef.current = null;
+            requestALawyerMutate({ threadId: chatThreadId })
           }, 100);
 
           return updatedHistory;

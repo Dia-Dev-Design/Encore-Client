@@ -22,7 +22,7 @@ export function getClients(key: string, params: Params) {
 }
 
 export function getNonActivatedUsers(key: string, params: Params) {
-  console.log("We're having problems here.... in getNonActivated...")
+
   // const { limit = 10, page = 1 } = params;
   
   return useQuery({

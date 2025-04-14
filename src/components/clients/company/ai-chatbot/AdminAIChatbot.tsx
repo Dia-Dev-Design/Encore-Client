@@ -99,134 +99,244 @@ const AdminAIChatbot = () => {
 
   // Setup Supabase realtime subscription when selectedChatId changes
   useEffect(() => {
-    console.log("This is the admin chatID", selectedChatId)
+    console.log("This is the admin chatID", selectedChatId);
     // Don't subscribe if no chat is selected
     if (!selectedChatId) {
       console.log("No chat selected, skipping subscription");
       return;
     }
-
+  
     console.log("Setting up subscription for chat ID:", selectedChatId);
-
+  
     // Create a unique channel name including the chat ID
     const channelName = `lawyer_chat_${selectedChatId}_${Date.now()}`;
-
-    // Create a channel filtered by ChatThreadId
+  
+    // Create a channel to listen for all message types
     const channel = supabase
       .channel(channelName)
+      // Listen for client messages
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
-          table: "ChatLawyerMessage", // Add the table that stores client messages
+          table: "ChatLawyerMessage", 
           filter: `ChatThreadId=eq.${selectedChatId}`,
         },
-        (payload: { new: any; old: any }) => {
-          console.log("Client message received:", payload);
+        (payload: { new: any; old: any; eventType: string }) => {
+          console.log("Message event received:", payload);
           
-          if (payload.new && payload.new.userMessageType === "USER_COMPANY") {
-            const clientMessage: HistoryNode = {
-              checkpoint_id: payload.new.id || `client-${Date.now()}`,
+          if (payload.new) {
+            // Determine role based on message type
+            const role = payload.new.userMessageType === "USER_COMPANY" ? "user" : "lawyer";
+            
+            // Skip if this is our own message that we've already added to the UI
+            if (role === "lawyer" && 
+                historyConversation.some(msg => {
+                  // Safely handle cases where checkpoint_id might not be in expected format
+                  try {
+                    const parts = msg.checkpoint_id.split('-');
+                    if (parts.length > 1 && !isNaN(parseInt(parts[1]))) {
+                      return msg.content === payload.new.content && 
+                             msg.role === "lawyer" && 
+                             Date.now() - parseInt(parts[1]) < 5000;
+                    }
+                    return false;
+                  } catch (error) {
+                    console.error("Error parsing checkpoint_id:", error);
+                    return false;
+                  }
+                })) {
+              console.log("Skipping our own recently sent message");
+              return;
+            }
+            
+            const newMessage: HistoryNode = {
+              checkpoint_id: payload.new.id?.toString() || `msg-${Date.now()}`,
               content: payload.new.content || payload.new.message || "",
-              role: "user",
-              forLawyer: true,
+              role: role,
+              forLawyer: role === "user", // Messages from users are for lawyer
               isStreaming: false,
               isError: false
             };
             
-            setHistoryConversation(prev => [...prev, clientMessage]);
+            // Add the message to the conversation
+            setHistoryConversation(prev => {
+              // Check if message already exists to prevent duplicates
+              if (prev.some(msg => msg.checkpoint_id === newMessage.checkpoint_id)) {
+                return prev;
+              }
+              return [...prev, newMessage];
+            });
           }
         }
       )
-      .subscribe((status) => {
+      // Also listen to the other message table if needed
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "ChatMessage", // The other table that might store messages
+          filter: `thread_id=eq.${selectedChatId}`,
+        },
+        (payload: { new: any; old: any; eventType: string }) => {
+          console.log("ChatMessage event received:", payload);
+          
+          if (payload.new) {
+            // Similar processing as above
+            const role = payload.new.userMessageType === "USER_COMPANY" ? "user" : "lawyer";
+            
+            const newMessage: HistoryNode = {
+              checkpoint_id: payload.new.id?.toString() || `msg-${Date.now()}`,
+              content: payload.new.content || payload.new.message || "",
+              role: role,
+              forLawyer: role === "user",
+              isStreaming: false,
+              isError: false
+            };
+            
+            setHistoryConversation(prev => {
+              if (prev.some(msg => msg.checkpoint_id === newMessage.checkpoint_id)) {
+                return prev;
+              }
+              return [...prev, newMessage];
+            });
+          }
+        }
+      )
+      .subscribe((status: string) => {
         console.log(`Subscription status for ${channelName}:`, status);
-
+  
         if (status === "SUBSCRIBED") {
           console.log(`Successfully subscribed to chat updates for ${selectedChatId}`);
         }
-
+  
         if (status === "CHANNEL_ERROR") {
           console.error(`Failed to subscribe to chat updates for ${selectedChatId}`);
         }
       });
-      // .on(
-      //   "postgres_changes",
-      //   {
-      //     event: "*", // Listen for all events
-      //     schema: "public",
-      //     table: "ChatLawyerMessage",
-      //     // filter: `ChatThreadId=eq.${selectedChatId}`,
-      //   },
-      //   (payload: { new: any; old: any; eventType: string }) => {
-      //     console.log(`WOIEOWOWOWOWOW!!!! Received ${payload.eventType} event:`, payload);
-          
-      //     // Only process INSERT events with valid new data
-      //     if (payload.eventType === "INSERT" && payload.new) {
-      //       console.log("New message received:", payload.new);
-            
-      //       // Transform the message into the proper HistoryNode format
-      //       const newMessage: HistoryNode = {
-      //         checkpoint_id: payload.new.id || `msg-${Date.now()}`,
-      //         content: payload.new.content || payload.new.message || "",
-      //         role: payload.new.role || payload.new.user_type || "user",
-      //         forLawyer: false,
-      //         isStreaming: false,
-      //         isError: false
-      //       };
-            
-      //       // Add message to conversation history
-      //       setHistoryConversation(prev => [...prev, newMessage]);
-            
-      //       // Optionally refresh the chat history query
-      //       queryClient.invalidateQueries({ queryKey: [CHAT_HISTORY, selectedChatId] });
-      //     }
-      //   }
-      // )
-      // // Also listen for any client messages
-      // .on(
-      //   "postgres_changes",
-      //   {
-      //     event: "INSERT",
-      //     schema: "public",
-      //     table: "ChatMessage", // Add the table that stores client messages
-      //     // filter: `thread_id=eq.${selectedChatId}`,
-      //   },
-      //   (payload: { new: any; old: any }) => {
-      //     console.log("Client message received:", payload);
-          
-      //     if (payload.new) {
-      //       const clientMessage: HistoryNode = {
-      //         checkpoint_id: payload.new.id || `client-${Date.now()}`,
-      //         content: payload.new.content || payload.new.message || "",
-      //         role: payload.new.role || "user",
-      //         forLawyer: true,
-      //         isStreaming: false,
-      //         isError: false
-      //       };
-            
-      //       setHistoryConversation(prev => [...prev, clientMessage]);
-      //     }
-      //   }
-      // )
-      // .subscribe((status) => {
-      //   console.log(`Subscription status for ${channelName}:`, status);
-
-      //   if (status === "SUBSCRIBED") {
-      //     console.log(`Successfully subscribed to chat updates for ${selectedChatId}`);
-      //   }
-
-      //   if (status === "CHANNEL_ERROR") {
-      //     console.error(`Failed to subscribe to chat updates for ${selectedChatId}`);
-      //   }
-      // });
-
+  
     // Return cleanup function
     return () => {
       console.log(`Cleaning up subscription for chat ${selectedChatId}`);
       supabase.removeChannel(channel);
     };
-  }, [selectedChatId, supabase, queryClient, supabase, historyConversation, setHistoryConversation, chatbotThreadType]);
+  }, [selectedChatId, supabase, historyConversation, setHistoryConversation]);
+// useEffect(() => {
+//   console.log("This is the admin chatID", selectedChatId);
+//   // Don't subscribe if no chat is selected
+//   if (!selectedChatId) {
+//     console.log("No chat selected, skipping subscription");
+//     return;
+//   }
+
+//   console.log("Setting up subscription for chat ID:", selectedChatId);
+
+//   // Create a unique channel name including the chat ID
+//   const channelName = `lawyer_chat_${selectedChatId}_${Date.now()}`;
+
+//   // Create a channel to listen for all message types
+//   const channel = supabase
+//     .channel(channelName)
+//     // Listen for client messages
+//     .on(
+//       "postgres_changes",
+//       {
+//         event: "*",
+//         schema: "public",
+//         table: "ChatLawyerMessage", 
+//         filter: `ChatThreadId=eq.${selectedChatId}`,
+//       },
+//       (payload) => {
+//         console.log("Message event received:", payload);
+        
+//         if (payload.new) {
+//           // Determine role based on message type
+//           const role = payload.new.userMessageType === "USER_COMPANY" ? "user" : "lawyer";
+          
+//           // Skip if this is our own message that we've already added to the UI
+//           if (role === "lawyer" && 
+//               historyConversation.some(msg => 
+//                 msg.content === payload.new.content && 
+//                 msg.role === "lawyer" && 
+//                 Date.now() - parseInt(msg.checkpoint_id.split('-')[1]) < 5000)) {
+//             console.log("Skipping our own recently sent message");
+//             return;
+//           }
+          
+//           const newMessage: HistoryNode = {
+//             checkpoint_id: payload.new.id || `msg-${Date.now()}`,
+//             content: payload.new.content || payload.new.message || "",
+//             role: role,
+//             forLawyer: role === "user", // Messages from users are for lawyer
+//             isStreaming: false,
+//             isError: false
+//           };
+          
+//           // Add the message to the conversation
+//           setHistoryConversation(prev => {
+//             // Check if message already exists to prevent duplicates
+//             if (prev.some(msg => msg.checkpoint_id === newMessage.checkpoint_id)) {
+//               return prev;
+//             }
+//             return [...prev, newMessage];
+//           });
+//         }
+//       }
+//     )
+//     // Also listen to the other message table if needed
+//     .on(
+//       "postgres_changes",
+//       {
+//         event: "*",
+//         schema: "public",
+//         table: "ChatMessage", // The other table that might store messages
+//         filter: `thread_id=eq.${selectedChatId}`,
+//       },
+//       (payload) => {
+//         console.log("ChatMessage event received:", payload);
+        
+//         if (payload.new) {
+//           // Similar processing as above
+//           const role = payload.new.userMessageType === "USER_COMPANY" ? "user" : "lawyer";
+          
+//           const newMessage: HistoryNode = {
+//             checkpoint_id: payload.new.id || `msg-${Date.now()}`,
+//             content: payload.new.content || payload.new.message || "",
+//             role: role,
+//             forLawyer: role === "user",
+//             isStreaming: false,
+//             isError: false
+//           };
+          
+//           setHistoryConversation(prev => {
+//             if (prev.some(msg => msg.checkpoint_id === newMessage.checkpoint_id)) {
+//               return prev;
+//             }
+//             return [...prev, newMessage];
+//           });
+//         }
+//       }
+//     )
+//     .subscribe((status) => {
+//       console.log(`Subscription status for ${channelName}:`, status);
+
+//       if (status === "SUBSCRIBED") {
+//         console.log(`Successfully subscribed to chat updates for ${selectedChatId}`);
+//       }
+
+//       if (status === "CHANNEL_ERROR") {
+//         console.error(`Failed to subscribe to chat updates for ${selectedChatId}`);
+//       }
+//     });
+
+//   // Return cleanup function
+//   return () => {
+//     console.log(`Cleaning up subscription for chat ${selectedChatId}`);
+//     supabase.removeChannel(channel);
+//   };
+// }, [selectedChatId, supabase, historyConversation, setHistoryConversation])
 
   return (
     <section className="h-full px-10 py-6">

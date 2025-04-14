@@ -127,27 +127,49 @@ useEffect(() => {
   console.log("About to set up Supabase subscription on channel:", channelName);
 
   try {
+    // Get the most recent message IDs to avoid duplicates
+    const existingMessageIds = new Set(
+      historyConversation
+        .filter(msg => msg.checkpoint_id && !msg.checkpoint_id.startsWith('msg-'))
+        .map(msg => msg.checkpoint_id)
+    );
+
+    console.log("Existing message IDs:", Array.from(existingMessageIds));
+
     const channel = supabase
       .channel(channelName)
       .on(
         "postgres_changes",
         {
-          event: "*", // Listen for all events (INSERT, UPDATE, DELETE)
+          event: "INSERT", // Only listen for new messages
           schema: "public",
           table: "ChatLawyerMessage",
           filter: `ChatThreadId=eq.${selectedChatId}`, // Apply the filter directly
         },
         (payload: { new: any; old: any; eventType: string }) => {
-          console.log("ChatLawyerMessage event received:", payload);
+          console.log("ChatLawyerMessage INSERT event received:", payload);
           
           if (!payload.new) {
             console.log("No new message data in payload");
             return;
           }
           
+          const messageId = payload.new.id?.toString();
+          
+          // Skip processing if we already have this message
+          if (existingMessageIds.has(messageId)) {
+            console.log(`Message ${messageId} already in conversation, skipping`);
+            return;
+          }
+          
+          // Add to tracked IDs
+          if (messageId) {
+            existingMessageIds.add(messageId);
+          }
+          
           // Log all the fields to debug
           console.log("Message data:", {
-            id: payload.new.id,
+            id: messageId,
             content: payload.new.content,
             userMessageType: payload.new.userMessageType,
             ChatThreadId: payload.new.ChatThreadId,
@@ -159,7 +181,7 @@ useEffect(() => {
           const role = isUserMessage ? "user" : "lawyer";
           
           const newMessage: HistoryNode = {
-            checkpoint_id: payload.new.id?.toString() || `msg-${Date.now()}`,
+            checkpoint_id: messageId || `msg-${Date.now()}`,
             content: payload.new.content || "",
             role: role,
             forLawyer: isUserMessage, // User messages are for lawyer
@@ -169,16 +191,28 @@ useEffect(() => {
           
           console.log("Processing message:", newMessage);
           
-          // Add the message to the conversation
+          // Add the message to the conversation without rechecking
           setHistoryConversation(prev => {
-            // Check if message already exists to prevent duplicates
-            const messageExists = prev.some(msg => 
-              msg.checkpoint_id === newMessage.checkpoint_id
+            // Double-check that the message isn't already in the history
+            // This covers any race conditions between state updates
+            if (prev.some(msg => msg.checkpoint_id === newMessage.checkpoint_id)) {
+              console.log("Message already exists in history state, skipping");
+              return prev;
+            }
+            
+            // Also check for similar content to catch optimistic updates
+            const similarMessage = prev.find(msg => 
+              msg.content === newMessage.content && 
+              msg.role === newMessage.role &&
+              msg.checkpoint_id.startsWith('msg-') // Only match temporary IDs
             );
             
-            if (messageExists) {
-              console.log("Message already exists, skipping");
-              return prev;
+            if (similarMessage) {
+              console.log("Similar message with temp ID found, replacing with real ID");
+              // Replace the temporary message with the real one
+              return prev.map(msg => 
+                msg === similarMessage ? newMessage : msg
+              );
             }
             
             console.log("Adding new message to conversation");
@@ -207,8 +241,7 @@ useEffect(() => {
     console.error("Error setting up Supabase subscription:", error);
     return () => {}; // Return empty cleanup function
   }
-// }, [selectedChatId, supabase, historyConversation, setHistoryConversation])
-}, [selectedChatId, supabase, historyConversation, setHistoryConversation]);
+}, [selectedChatId, supabase, historyConversation]);;
 //   // Create a channel to listen for all message types
 //   const channel = supabase
 //     .channel(channelName)

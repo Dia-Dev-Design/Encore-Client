@@ -60,7 +60,7 @@ const AdminAIChatbot = () => {
           (msg: HistoryNode, index: number) => {
             const historyNode: HistoryNode = {
               checkpoint_id:
-                msg.checkpoint_id || `history-${index}-${Date.now()}`,
+              msg.checkpoint_id || `history-${index}-${Date.now()}`,
               content: msg.content || "",
               role: msg.role,
               fileId: msg.fileId || undefined,
@@ -226,7 +226,7 @@ const AdminAIChatbot = () => {
       console.log(`Cleaning up subscription for chat ${selectedChatId}`);
       supabase.removeChannel(channel);
     };
-  }, [selectedChatId, supabase, queryClient]);
+  }, [selectedChatId, supabase, queryClient, supabase, historyConversation, setHistoryConversation, chatbotThreadType]);
 
   return (
     <section className="h-full px-10 py-6">

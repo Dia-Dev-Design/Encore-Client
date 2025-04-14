@@ -115,8 +115,21 @@ const ChatWindow: React.FC<ChatWindowProps> =({
             
             // Determine if we're sending as a lawyer or regular user
             const userType = isLawyer ? "lawyer" : (userData?.userType === 'Admin' ? "admin" : "user");
-
+    
             const forWhom = userType === 'user'
+            
+            // Add the message immediately to local UI before sending to server
+            const newMessage: HistoryNode = {
+                checkpoint_id: `local-${Date.now()}`,
+                content: answer,
+                role: userType,
+                forLawyer: false,
+                isStreaming: false,
+                isError: false
+            };
+            
+            // Update the UI immediately with the new message
+            setHistoryConversation([...historyConversation, newMessage]);
             
             const payload = {
                 threadId: chatbotThreadId,
@@ -130,10 +143,10 @@ const ChatWindow: React.FC<ChatWindowProps> =({
             sendAnswer(payload, { 
                 onSuccess: (data) => {
                     console.log("Message sent successfully:", data);
+                    // We already added the message to UI, no need to add again
                 },
                 onError: (error, payload) => {
                     console.error("Error:", error);
-                    // More specific type checking for Axios-like errors
                     if (error && 
                         typeof error === 'object' && 
                         'response' in error && 
@@ -143,8 +156,7 @@ const ChatWindow: React.FC<ChatWindowProps> =({
                         console.error("Error response data:", error.response.data);
                     }
                     
-                    // Even if the server request failed, we still want to show the message in the UI
-                    // Add the message to the conversation history anyway
+                    // Mark the message as having an error
                     const newLawyerMessage: HistoryNode = {
                         checkpoint_id: `error-${Date.now()}`,
                         content: answer,
@@ -155,7 +167,8 @@ const ChatWindow: React.FC<ChatWindowProps> =({
                 },
             });
         }
-
+    
+        // Rest of the function remains the same
         if (fetchedThread) {
             sendAnswerProcess(fetchedThread);
         } else {
@@ -174,6 +187,79 @@ const ChatWindow: React.FC<ChatWindowProps> =({
             }
         }
     };
+
+    // const handleAnswer = (answer: string, fetchedThread?: string) => {
+    //     // Log user info for debugging
+    //     console.log("Current user:", userData);
+    //     console.log("Is lawyer:", isLawyer);
+        
+    //     const sendAnswerProcess = (chatbotThreadId: string) => {
+    //         if (!chatbotThreadId) {
+    //             alert("Error sending answer");
+    //             return;
+    //         }
+            
+    //         // Determine if we're sending as a lawyer or regular user
+    //         const userType = isLawyer ? "lawyer" : (userData?.userType === 'Admin' ? "admin" : "user");
+
+    //         const forWhom = userType === 'user'
+            
+    //         const payload = {
+    //             threadId: chatbotThreadId,
+    //             message: answer,
+    //             userType: userType,
+    //             forLawyer: forWhom
+    //         };
+            
+    //         console.log(`Sending answer with payload as ${userType}:`, payload);
+            
+    //         sendAnswer(payload, { 
+    //             onSuccess: (data) => {
+    //                 console.log("Message sent successfully:", data);
+    //             },
+    //             onError: (error, payload) => {
+    //                 console.error("Error:", error);
+    //                 // More specific type checking for Axios-like errors
+    //                 if (error && 
+    //                     typeof error === 'object' && 
+    //                     'response' in error && 
+    //                     error.response && 
+    //                     typeof error.response === 'object' && 
+    //                     'data' in error.response) {
+    //                     console.error("Error response data:", error.response.data);
+    //                 }
+                    
+    //                 // Even if the server request failed, we still want to show the message in the UI
+    //                 // Add the message to the conversation history anyway
+    //                 const newLawyerMessage: HistoryNode = {
+    //                     checkpoint_id: `error-${Date.now()}`,
+    //                     content: answer,
+    //                     role: "lawyer",
+    //                     forLawyer: forWhom
+    //                 };
+    //                 setHistoryConversation([...historyConversation, newLawyerMessage]);
+    //             },
+    //         });
+    //     }
+
+    //     if (fetchedThread) {
+    //         sendAnswerProcess(fetchedThread);
+    //     } else {
+    //         if (!chatbotThread?.id ) {
+    //             fetchChatbotThread(undefined, {
+    //                 onSuccess: (data) => {
+    //                     setChatbotThread(data);
+    //                     sendAnswerProcess(data.id);
+    //                 },
+    //                 onError: (error) => {
+    //                     console.error("Error:", error);
+    //                 },
+    //             });
+    //         } else {
+    //             sendAnswerProcess(chatbotThread.id);
+    //         }
+    //     }
+    // };
 
     const getHeaderTitle = () => {
         return chatbotThread?.title ? chatbotThread.title : ""

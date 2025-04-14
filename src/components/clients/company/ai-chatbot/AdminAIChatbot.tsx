@@ -114,7 +114,7 @@ const AdminAIChatbot = () => {
     // Create a channel to listen for all message types
     const channel = supabase
       .channel(channelName)
-      // Listen for client messages
+      // Listen for all messages in the ChatLawyerMessage table
       .on(
         "postgres_changes",
         {
@@ -124,85 +124,102 @@ const AdminAIChatbot = () => {
           filter: `ChatThreadId=eq.${selectedChatId}`,
         },
         (payload: { new: any; old: any; eventType: string }) => {
-          console.log("Message event received:", payload);
+          console.log("ChatLawyerMessage event received:", payload);
           
-          if (payload.new) {
-            // Determine role based on message type
-            const role = payload.new.userMessageType === "USER_COMPANY" ? "user" : "lawyer";
+          if (!payload.new) return;
+          
+          // Log all the fields to debug
+          console.log("Received message data:", {
+            id: payload.new.id,
+            content: payload.new.content,
+            message: payload.new.message,
+            userMessageType: payload.new.userMessageType,
+            all: payload.new
+          });
+          
+          // Determine role based on message type - be more flexible with the check
+          const isUserMessage = 
+            payload.new.userMessageType === "USER_COMPANY" || 
+            payload.new.role === "user" ||
+            payload.new.user_type === "user";
+          
+          const role = isUserMessage ? "user" : "lawyer";
+          
+          // Always show messages from users to lawyers
+          const newMessage: HistoryNode = {
+            checkpoint_id: payload.new.id?.toString() || `msg-${Date.now()}`,
+            content: payload.new.content || payload.new.message || "",
+            role: role,
+            forLawyer: isUserMessage, // User messages are for lawyer
+            isStreaming: false,
+            isError: false
+          };
+          
+          console.log("Processing message:", newMessage);
+          
+          // Add the message to the conversation
+          setHistoryConversation(prev => {
+            // Check if message already exists to prevent duplicates
+            const messageExists = prev.some(msg => 
+              msg.checkpoint_id === newMessage.checkpoint_id || 
+              (msg.content === newMessage.content && 
+               Math.abs(parseInt(msg.checkpoint_id.split('-')[1] || '0') - Date.now()) < 5000)
+            );
             
-            // Skip if this is our own message that we've already added to the UI
-            if (role === "lawyer" && 
-                historyConversation.some(msg => {
-                  // Safely handle cases where checkpoint_id might not be in expected format
-                  try {
-                    const parts = msg.checkpoint_id.split('-');
-                    if (parts.length > 1 && !isNaN(parseInt(parts[1]))) {
-                      return msg.content === payload.new.content && 
-                             msg.role === "lawyer" && 
-                             Date.now() - parseInt(parts[1]) < 5000;
-                    }
-                    return false;
-                  } catch (error) {
-                    console.error("Error parsing checkpoint_id:", error);
-                    return false;
-                  }
-                })) {
-              console.log("Skipping our own recently sent message");
-              return;
+            if (messageExists) {
+              console.log("Message already exists, skipping");
+              return prev;
             }
             
-            const newMessage: HistoryNode = {
-              checkpoint_id: payload.new.id?.toString() || `msg-${Date.now()}`,
-              content: payload.new.content || payload.new.message || "",
-              role: role,
-              forLawyer: role === "user", // Messages from users are for lawyer
-              isStreaming: false,
-              isError: false
-            };
-            
-            // Add the message to the conversation
-            setHistoryConversation(prev => {
-              // Check if message already exists to prevent duplicates
-              if (prev.some(msg => msg.checkpoint_id === newMessage.checkpoint_id)) {
-                return prev;
-              }
-              return [...prev, newMessage];
-            });
-          }
+            console.log("Adding new message to conversation");
+            return [...prev, newMessage];
+          });
         }
       )
-      // Also listen to the other message table if needed
+      // Also listen to the ChatMessage table
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
-          table: "ChatMessage", // The other table that might store messages
+          table: "ChatMessage",
           filter: `thread_id=eq.${selectedChatId}`,
         },
         (payload: { new: any; old: any; eventType: string }) => {
           console.log("ChatMessage event received:", payload);
           
-          if (payload.new) {
-            // Similar processing as above
-            const role = payload.new.userMessageType === "USER_COMPANY" ? "user" : "lawyer";
-            
-            const newMessage: HistoryNode = {
-              checkpoint_id: payload.new.id?.toString() || `msg-${Date.now()}`,
-              content: payload.new.content || payload.new.message || "",
-              role: role,
-              forLawyer: role === "user",
-              isStreaming: false,
-              isError: false
-            };
-            
-            setHistoryConversation(prev => {
-              if (prev.some(msg => msg.checkpoint_id === newMessage.checkpoint_id)) {
-                return prev;
-              }
-              return [...prev, newMessage];
-            });
-          }
+          if (!payload.new) return;
+          
+          // Log more data for debugging
+          console.log("ChatMessage data:", payload.new);
+          
+          // Try to determine the role from various possible field names
+          const isUserMessage = 
+            payload.new.userMessageType === "USER_COMPANY" || 
+            payload.new.role === "user" ||
+            payload.new.user_type === "user";
+          
+          const role = isUserMessage ? "user" : "lawyer";
+          
+          const newMessage: HistoryNode = {
+            checkpoint_id: payload.new.id?.toString() || `chat-msg-${Date.now()}`,
+            content: payload.new.content || payload.new.message || "",
+            role: role,
+            forLawyer: isUserMessage, // User messages are for lawyer
+            isStreaming: false,
+            isError: false
+          };
+          
+          console.log("Processing ChatMessage:", newMessage);
+          
+          setHistoryConversation(prev => {
+            if (prev.some(msg => msg.checkpoint_id === newMessage.checkpoint_id)) {
+              console.log("ChatMessage already exists, skipping");
+              return prev;
+            }
+            console.log("Adding new ChatMessage to conversation");
+            return [...prev, newMessage];
+          });
         }
       )
       .subscribe((status: string) => {
